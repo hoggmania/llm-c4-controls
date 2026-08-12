@@ -1,7 +1,8 @@
-# PlantUML render artifacts
-*.png
-*.svg
-*.txt
+# Native PlantUML binary (downloaded; not committed — re-fetch from release)
+.plantuml/
+
+# PlantUML render cache (if you prefer regenerating over committing)
+*.txthtml
 
 # Editor / OS noise
 .DS_Store
