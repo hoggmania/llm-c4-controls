@@ -1,0 +1,44 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Level 2 — Containers: Where Controls Live in an LLM System
+
+Person(user, "End User", "Uses the application")
+Person(engineer, "AI Engineer / Operator", "Builds & operates the system")
+
+System_Boundary(llmApp, "LLM-Powered Application") {
+
+  Container(ui, "Web / App Frontend", "React / SPA", "User interface; enforces session & UI-level input hints")
+
+  Container(orch, "Application / Orchestration Service", "Python / FastAPI", "Prompt assembly, RAG, tool-calling; enforces input validation & injection defense")
+  Container(guard, "Guardrail / Policy Engine", "Policy service", "Content filtering (in+out), PII redaction, policy & jailbreak defense")
+  Container(gw, "LLM Gateway", "Proxy", "Model abstraction, key mgmt, routing, fallback, usage metering")
+
+  ContainerDb(vec, "Vector / Knowledge Store", "pgvector / Pinecone", "Embeddings & retrieved context for RAG")
+  ContainerDb(secrets, "Secrets & Config Store", "Vault / Parameter Store", "API keys, model params, policy config")
+  ContainerDb(obs, "Observability & Audit Store", "Logs / Traces / Eval DB", "Immutable traces, feedback, eval & drift results")
+}
+
+System_Ext(modelProvider, "Model Provider", "Hosted or self-hosted LLM API")
+System_Ext(dataSrc, "Enterprise Data Sources", "Documents & APIs for RAG")
+
+Rel(user, ui, "Uses", "AuthN, session")
+Rel(ui, orch, "Send request", "HTTPS, token")
+Rel(engineer, orch, "Deploy / configure", "RBAC, CI/CD")
+Rel(orch, guard, "Pre/post-filter text", "gRPC")
+Rel(orch, gw, "Forward completion request", "internal")
+Rel(gw, modelProvider, "Prompt / completion", "API key, tenancy")
+Rel(orch, vec, "Retrieve context", "scoped, encrypted")
+Rel(orch, secrets, "Read keys/config", "least privilege")
+Rel(orch, obs, "Write traces & metrics", "append-only")
+Rel(gw, secrets, "Read model keys", "least privilege")
+Rel(guard, secrets, "Read policy", "least privilege")
+
+note right of guard
+  <b>Guardrail / Policy Engine</b> is the primary
+  control container: input & output moderation,
+  PII handling, topic/allowed-use policy,
+  jailbreak & prompt-injection defense.
+end note
+
+@enduml

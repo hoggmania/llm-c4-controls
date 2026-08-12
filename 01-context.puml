@@ -1,0 +1,43 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title C4 Level 1 — System Context: Controlling the Use of LLMs
+
+'' ============================================================
+''  INTERPRETATION
+''  "Controls required in different parts of using LLMs" = the
+''  governance, security and safety envelope that must surround
+''  any system that consumes language models. Level 1 shows the
+''  actors and external systems, and the control relationships
+''  (auth, logging, compliance, vendor mgmt) that bind them.
+'' ============================================================
+
+Enterprise_Boundary(org, "Owning Organisation") {
+  Person(user, "End User", "Submits prompts, receives model output via the app")
+  Person(engineer, "AI Engineer / Operator", "Builds, deploys, configures and runs the system")
+  Person(gov, "Compliance & Risk", "Owns policy, audit, regulatory reporting")
+
+  System(llmApp, "LLM-Powered Application", "Generates value using one or more LLMs, operated inside a control framework")
+}
+
+System_Ext(modelProvider, "Model Provider", "Hosted LLM (OpenAI/Anthropic/self-host) or on-prem inference")
+System_Ext(dataSrc, "Enterprise Data Sources", "Knowledge bases, docs, APIs used for RAG")
+System_Ext(regulator, "Regulator / Standards Body", "External mandates: GDPR, EU AI Act, ISO 42001, NIST AI RMF")
+
+Rel(user, llmApp, "Prompts & responses", "AuthN, session, rate-limit")
+Rel(engineer, llmApp, "Configure, deploy, monitor", "RBAC, change control")
+Rel(gov, llmApp, "Review logs & assessments", "Read-only, audit access")
+Rel(llmApp, modelProvider, "Prompt in / completion out", "API key, tenancy, DPA")
+Rel(llmApp, dataSrc, "Retrieve context (RAG)", "Scoped access, encryption")
+Rel(regulator, llmApp, "Imposes controls & reporting", "Compliance")
+
+note right of llmApp
+  <b>Cross-cutting controls (apply at every level):</b>
+  - Governance: model inventory, risk register, policy
+  - Access control & identity (SSO, RBAC, least privilege)
+  - Logging & audit trail (prompt/response, decisions)
+  - Vendor / third-party risk management
+  - Compliance reporting & record-keeping
+end note
+
+@enduml

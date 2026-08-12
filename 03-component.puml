@@ -1,0 +1,68 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Level 3 — Components: Main Controls by Lifecycle Stage
+
+Container_Boundary(app, "LLM-Powered Application") {
+
+  Boundary(b_in, "Input Stage", "Controls applied before the model is called") {
+    Component(auth, "AuthN / AuthZ", "OIDC + RBAC", "Verifies identity and permissions per request")
+    Component(sanitize, "Input Sanitizer", "Validator", "Schema check, prompt-injection & payload validation")
+    Component(pii_in, "PII Redactor", "Tokenization", "Masks/tokenizes sensitive data before model")
+    Component(limit_in, "Rate Limiter / Quota", "Token bucket", "Cost & abuse control per user/tenant")
+  }
+
+  Boundary(b_inf, "Inference Stage", "Controls applied while generating") {
+    Component(orch, "Orchestrator / Prompt Builder", "Service", "Assembles prompts, RAG, enforces parameter policy")
+    Component(mod_in, "Input Moderation", "Classifier", "Blocks disallowed topics / harmful intent")
+    Component(gateway, "LLM Gateway", "Proxy", "Model routing, key mgmt, fallback, metering")
+  }
+
+  Boundary(b_out, "Output Stage", "Controls applied to model output") {
+    Component(mod_out, "Output Moderation", "Classifier", "Filters toxic/unsafe/leaked-secret content")
+    Component(validate, "Output Validator", "Service", "Format, policy & fact-check hooks")
+    Component(pii_out, "PII Re-exposure Guard", "Service", "Prevents re-surfacing masked data")
+  }
+
+  Boundary(b_ops, "Assurance & Operations", "Controls applied continuously") {
+    Component(audit, "Audit Logger", "Append-only store", "Immutable traces of prompt/response/decisions")
+    Component(hitl, "Human-in-the-Loop", "Review queue", "Human review for high-risk actions")
+    Component(eval, "Eval & Drift Monitor", "Pipeline", "Quality, bias, drift, red-team feedback")
+    Component(policy, "Policy & Config Store", "Versioned", "Allowed-use, topics, thresholds")
+  }
+}
+
+System_Ext(modelProvider, "Model Provider", "LLM API")
+System_Ext(vec, "Vector / Knowledge Store", "RAG context")
+
+Rel(user, auth, "Request", "")
+Rel(auth, sanitize, "Pass verified request", "")
+Rel(sanitize, pii_in, "Clean text", "")
+Rel(pii_in, limit_in, "Scoped text", "")
+Rel(limit_in, mod_in, "Allowed text", "")
+Rel(mod_in, orch, "Safe input", "")
+Rel(orch, vec, "Retrieve context", "")
+Rel(orch, gateway, "Completion request", "")
+Rel(gateway, modelProvider, "Prompt / completion", "")
+Rel(modelProvider, mod_out, "Raw completion", "")
+Rel(mod_out, validate, "Filtered text", "")
+Rel(validate, pii_out, "Checked text", "")
+Rel(pii_out, user, "Final response", "")
+
+Rel(orch, audit, "Log", "")
+Rel(gateway, audit, "Log", "")
+Rel(mod_in, audit, "Log", "")
+Rel(mod_out, audit, "Log", "")
+Rel(validate, hitl, "Escalate risky", "")
+Rel(hitl, user, "Release / block", "")
+Rel(eval, policy, "Read thresholds", "")
+Rel(orch, policy, "Read policy", "")
+
+note bottom of b_ops
+  <b>Lifecycle mapping:</b> Input → Inference → Output → Assurance.
+  Pre-deployment controls (model eval, red-teaming, security review,
+  bias testing, ISO 42001 / EU AI Act conformance) feed the Policy Store
+  and Eval Monitor before any of these run.
+end note
+
+@enduml
