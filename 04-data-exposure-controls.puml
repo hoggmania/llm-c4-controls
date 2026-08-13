@@ -8,48 +8,48 @@ Container_Boundary(app, "AI System - Where Private Data Gets Exposed") {
 
   Boundary(b_an, "AI Analyzer / Cortex-style", "Summarizes logs, alerts, cases") {
     Component(an_store, "Case / Log Store", "SIEM data", "Holds PII, creds, infra detail")
-    Component(an_dlp, "AI-DLP / Pre-redaction", "Scrubber", "PII removed BEFORE egress to model. [LLM02, LLM03]")
-    Component(an_rbac, "Field-level RBAC", "Access ctrl", "Limits what analyzer can read. [LLM06]")
+    Component(an_dlp, "AI-DLP / Pre-redaction", "Scrubber", "PII removed BEFORE egress to model. [LLM02, LLM04]")
+    Component(an_rbac, "Field-level RBAC", "Access ctrl", "Limits what analyzer can read. [LLM03]")
     Component(an_inj, "Ingested-content Screener", "Filter", "Scans logs/alerts for injected instructions. [LLM01]")
-    Component(an_out, "Output Filter", "Redactor", "Redacts summary before analyst view. [LLM05, LLM02]")
+    Component(an_out, "Output Filter", "Redactor", "Redacts summary before analyst view. [LLM10, LLM02]")
   }
 
-  Boundary(b_tok, "Tokenizer / Embedding API", "text -> tokens / vectors") {
-    Component(tok_api, "Token / Logprob API", "Model API", "Exposes token reps & hidden states")
-    Component(tok_scrub, "Pre-scrub PII", "Scrubber", "Clean text before 3rd-party tokenizer. [LLM02, LLM03]")
-    Component(tok_gate, "Gate logprobs & states", "Policy", "No raw hidden-state to untrusted callers. [LLM08]")
-    Component(tok_rl, "Rate-limit & cap", "Quota", "Throttles token inflation (homoglyphs). [LLM10]")
+  Boundary(b_tok, "Tokenization & Model Diagnostics", "text -> token IDs; optional model diagnostics") {
+    Component(tok_api, "Tokenizer / Diagnostics API", "Model API", "Tokenizes text; optional logprobs or privileged internal diagnostics")
+    Component(tok_scrub, "Pre-scrub PII", "Scrubber", "Clean text before 3rd-party tokenizer. [LLM02, LLM04]")
+    Component(tok_gate, "Gate logprobs & internal states", "Policy", "No raw diagnostics to untrusted callers. [LLM02, LLM08]")
+    Component(tok_rl, "Rate-limit & cap", "Quota", "Throttles token inflation (homoglyphs). [LLM06]")
   }
 
   Boundary(b_ss, "Semantic Search", "vector retrieval") {
-    Component(ss_vec, "Query & Corpus Embeddings", "VDB", "Stored vectors are recoverable")
-    Component(ss_enc, "Encrypt embeddings", "Crypto", "At rest + in transit; VDB = sensitive. [LLM08]")
-    Component(ss_acl, "Tenant / namespace ACLs", "Access ctrl", "Per-tenant vector isolation. [LLM06]")
-    Component(ss_val, "Index validation", "Validator", "Screens docs for poison/injection. [LLM04, LLM01]")
+    Component(ss_vec, "Query & Corpus Embeddings", "VDB", "Embeddings may permit source-text reconstruction. [LLM02, LLM09]")
+    Component(ss_enc, "Encrypt embeddings", "Crypto", "At rest + in transit; VDB = sensitive. [LLM09]")
+    Component(ss_acl, "Tenant / namespace ACLs", "Access ctrl", "Per-tenant vector isolation. [LLM03]")
+    Component(ss_val, "Index validation", "Validator", "Screens docs for poison/injection. [LLM05, LLM01]")
   }
 
   Boundary(b_rag, "RAG Pipeline", "retrieve-augmented generation") {
-    Component(rag_ret, "Retriever", "Search", "Fetches docs into context")
-    Component(rag_acl, "Doc-level pre-retrieval ACL", "Access ctrl", "Only retrieve docs user may see. [LLM06, LLM02]")
+    Component(rag_ret, "Retriever", "Search", "Queries the permission-scoped vector index. [LLM09]")
+    Component(rag_acl, "Doc-level pre-retrieval ACL", "Access ctrl", "Only retrieve docs user may see. [LLM03, LLM02]")
     Component(rag_scr, "Retrieved-content Screener", "Filter", "Blocks injected instructions in docs. [LLM01]")
     Component(rag_red, "Post-retrieval PII redaction", "Redactor", "Scrubs sensitive spans. [LLM02]")
-    Component(rag_out, "Output guardrail", "Policy", "No secret echo; cite sources. [LLM05, LLM07]")
+    Component(rag_out, "Output guardrail", "Policy", "No secret echo; cite sources. [LLM10, LLM08]")
   }
 
   Boundary(b_sc, "Supply Chain & Vulnerability", "vendor + dependency + data provenance") {
-    Component(sc_inv, "Model / Vendor Inventory", "Registry", "Catalogue providers, versions, data flows. [LLM03]")
-    Component(sc_sbom, "SBOM & Dependency Scan", "Scanner", "CVE scan of libs, tokenizer deps, RAG loaders. [LLM03]")
-    Component(sc_train, "Training/Pretrain PII Scan", "Scanner", "Checks for PII / poisoned data in fine-tune & corpus. [LLM03, LLM04]")
-    Component(sc_cfg, "Provider Config & Key Hygiene", "Policy", "DPAs, no hard-coded keys, tenant isolation, kill-switch. [LLM03, LLM07]")
-    Component(sc_lic, "License / Provenance Check", "Policy", "Model & dataset license + source attestation. [LLM03]")
+    Component(sc_inv, "Model / Vendor Inventory", "Registry", "Catalogue providers, versions, data flows. [LLM04]")
+    Component(sc_sbom, "SBOM & Dependency Scan", "Scanner", "CVE scan of libs, tokenizer deps, RAG loaders. [LLM04]")
+    Component(sc_train, "Training/Pretrain PII Scan", "Scanner", "Checks for PII / poisoned data in fine-tune & corpus. [LLM04, LLM05]")
+    Component(sc_cfg, "Provider Config & Key Hygiene", "Policy", "DPAs, no hard-coded keys, tenant isolation, kill-switch. [LLM04, LLM08]")
+    Component(sc_lic, "License / Provenance Check", "Policy", "Model & dataset license + source attestation. [LLM04]")
   }
 
-  Boundary(b_post, "Post-Usage Detection & Alerting", "runs after I/O; catches residual leaks") {
-    Component(post_dlp, "Semantic (LLM-based) Egress DLP", "Inspector model", "Catches PII described-in-prose/paraphrased that regex misses. Separate model instance from app LLM. [LLM02]")
-    Component(post_emb, "Embedding-exposure Detector", "Scanner", "Flags vector stores / logs leaked to untrusted parties. [LLM08]")
-    Component(post_anom, "Anomaly & Leak Detection", "Detector", "Unusual volume, token-inflation, secret patterns. [LLM10, LLM02]")
-    Component(post_drift, "Drift & Feedback Loop", "Pipeline", "Quality, bias, behavior change; user-flagged leaks. [LLM09]")
-    Component(post_alert, "Audit -> SIEM Alerting", "Connector", "Immutable traces fan out to SOC/IR. [LLM05, LLM02]")
+  Boundary(b_post, "Detection, Alerting & Feedback", "inline egress inspection + post-event monitoring") {
+    Component(post_dlp, "Semantic (LLM-based) Egress DLP", "Inspector model", "Inspects output before release; catches semantic leakage regex misses. Separate model instance from app LLM. [LLM02]")
+    Component(post_emb, "Embedding-exposure Detector", "Scanner", "Flags vector stores / logs leaked to untrusted parties. [LLM09]")
+    Component(post_anom, "Anomaly & Leak Detection", "Detector", "Unusual volume, token-inflation, secret patterns. [LLM06, LLM02]")
+    Component(post_drift, "Drift & Feedback Loop", "Pipeline", "Quality, bias, behavior change; user-flagged leaks. [LLM07]")
+    Component(post_alert, "Audit -> SIEM Alerting", "Connector", "Immutable traces fan out to SOC/IR. [LLM10, LLM02]")
     Component(post_rt, "Red-team & Review Queue", "Workflow", "Human review of high-risk / near-miss events. [LLM01]")
 
 note top of b_post
@@ -57,8 +57,8 @@ note top of b_post
   catching semantic leakage (e.g. "the patient with the rare condition") that
   regex/label DLP miss. Critical rule: the inspector must be a SEPARATE model
   instance with no shared context or credentials, so a compromised app LLM
-  cannot blind its own DLP. The same pattern powers post_emb (inversion) and
-  post_drift. Treat the LLM as a semantic DLP, not just a risky sink.
+  cannot blind its own DLP. Vector-store access monitoring (post_emb) and drift
+  evaluation (post_drift) remain independent complementary controls.
 end note
   }
 }
@@ -67,14 +67,14 @@ System_Ext(modelProvider, "Model / Embedding Provider", "external or self-hosted
 System_Ext(vecstore, "Vector Database", "stored embeddings")
 System_Ext(soc, "SIEM / SOC", "incident response")
 
-Rel(an_store, an_dlp, "scrubbed text", "")
-Rel(an_dlp, modelProvider, "summarization request", "egress")
-Rel(an_rbac, an_store, "scope reads", "")
-Rel(an_inj, modelProvider, "clean prompt", "")
-Rel(an_out, an_store, "redacted summary", "")
+Rel(an_rbac, an_store, "authorize scoped read", "")
+Rel(an_store, an_dlp, "raw authorized case/log data", "")
+Rel(an_dlp, an_inj, "redacted content", "")
+Rel(an_inj, modelProvider, "screened summarization request", "egress")
+Rel(modelProvider, an_out, "raw summary", "")
 
-Rel(tok_scrub, tok_api, "clean tokens", "")
-Rel(tok_gate, tok_api, "gated access", "")
+Rel(tok_scrub, tok_api, "scrubbed text", "")
+Rel(tok_api, tok_gate, "diagnostic output", "")
 Rel(tok_rl, tok_api, "throttle", "")
 
 Rel(ss_vec, ss_enc, "protect", "")
@@ -82,11 +82,12 @@ Rel(ss_acl, ss_vec, "isolate", "")
 Rel(ss_val, ss_vec, "screen", "")
 Rel(ss_vec, vecstore, "store / query", "")
 
-Rel(rag_ret, rag_acl, "authorized docs", "")
-Rel(rag_acl, rag_scr, "filtered docs", "")
-Rel(rag_scr, rag_red, "safe docs", "")
-Rel(rag_red, rag_out, "context", "")
-Rel(rag_out, modelProvider, "generation", "")
+Rel(rag_acl, rag_ret, "authorized query & document scope", "")
+Rel(rag_ret, vecstore, "query scoped index", "")
+Rel(rag_ret, rag_scr, "authorized retrieved docs", "")
+Rel(rag_scr, rag_red, "screened docs", "")
+Rel(rag_red, modelProvider, "sanitized context + prompt", "generation")
+Rel(modelProvider, rag_out, "raw answer", "")
 
 Rel(sc_inv, modelProvider, "track version", "")
 Rel(sc_sbom, sc_inv, "feeds inventory", "")
@@ -102,22 +103,22 @@ Rel(post_alert, soc, "immutable trace", "")
 Rel(post_rt, soc, "escalate", "")
 
 ' residual / cross-link: post-usage catches what ingestion missed
-Rel(an_dlp, post_dlp, "verify egress", "")
+Rel(an_out, post_dlp, "verify redacted summary", "")
 Rel(rag_out, post_dlp, "verify output", "")
 Rel(ss_vec, post_emb, "scan store", "")
 
 note bottom of app
   OWASP GenAI LLM Top 10 (2026) coverage:
   LLM01 Prompt Injection ....... analyzer, semantic search, RAG, red-team queue
-  LLM02 Sensitive Info Discl ... ALL (ingest + egress DLP + anomaly)
-  LLM03 Supply Chain ........... vendor inventory, SBOM, train-PII, config, provenance
-  LLM04 Data/Model Poisoning ... semantic search, RAG, training-data scan
-  LLM05 Improper Output Handle . analyzer, RAG, semantic search, SIEM alerting
-  LLM06 Excessive Agency/Perm .. analyzer, semantic search, RAG
-  LLM07 System Prompt Leakage .. analyzer, RAG, provider config
-  LLM08 Vector/Embedding Weak .. tokenizer, semantic search, RAG, emb-exposure detector
-  LLM09 Misinformation ......... drift & feedback loop
-  LLM10 Unbounded Consumption .. analyzer, tokenizer, semantic search, RAG, anomaly
+  LLM02 Sensitive Info Discl ... analyzer, diagnostics, semantic search, RAG, egress DLP
+  LLM03 Excessive Agency ....... analyzer, semantic search, RAG
+  LLM04 Supply Chain ........... vendor inventory, SBOM, train-PII, config, provenance
+  LLM05 Data/Model Poisoning ... semantic search, RAG, training-data scan
+  LLM06 Unbounded Consumption .. tokenization/diagnostics, cross-surface anomaly detection
+  LLM07 Misinformation ......... drift & feedback loop
+  LLM08 Hidden Context Exposure  diagnostics, RAG, provider config
+  LLM09 Vector/Embedding Weak .. semantic search, RAG, emb-exposure detector
+  LLM10 Improper Output Handle . analyzer, RAG, SIEM alerting
   Full matrix: 05-owasp-coverage.md
 end note
 

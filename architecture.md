@@ -2,7 +2,7 @@
 
 This page explains the C4 model used in this repo and how the diagrams map onto the
 private-data-exposure story told in [`article.md`](article.md). It covers the four
-diagram levels and the OWASP GenAI LLM Top 10 (2026) coverage in
+diagram levels and the OWASP GenAI LLM Top 10 2026 coverage in
 [`05-owasp-coverage.md`](05-owasp-coverage.md).
 
 All diagrams are rendered with the native PlantUML binary (v1.2026.6, no JRE required)
@@ -15,7 +15,7 @@ The point is *progressive disclosure*: you show a system at increasing zoom so e
 audience sees the right level of detail without drowning in the rest.
 
 For LLM privacy, C4 is the right shape because "private data leaks in AI" is not one
-risk with one control — it is several distinct surfaces (analyzers, tokenizers, semantic
+risk with one control — it is several distinct surfaces (analyzers, tokenization and model diagnostics, semantic
 search, RAG) plus supply-chain and post-usage concerns, each needing its own control.
 The four levels below walk from *who/what is involved* down to *which control sits where*.
 
@@ -58,13 +58,14 @@ This is the diagram the article is built around. It places private-data-exposure
 across the four real surfaces plus the two layers most programs omit:
 
 - **AI Analyzer / Cortex-style** — pre-redaction, field-level RBAC, ingested-content screening, output redaction
-- **Tokenizer** — pre-scrub PII, gate logprobs/hidden states (inversion defense), rate-limit
+- **Tokenization & model diagnostics** — pre-scrub PII, restrict logprobs/internal states, rate-limit
 - **Semantic Search** — encrypt embeddings, tenant ACLs, index validation
 - **RAG** — doc-level pre-retrieval ACL, retrieved-content screening, post-retrieval PII redaction, output guardrail
 - **Supply Chain & Vulnerability** — model/vendor inventory, SBOM scan, training-PII scan, provider config hygiene, provenance
-- **Post-Usage Detection & Alerting** — semantic egress DLP, embedding-exposure detector, anomaly detection, drift loop, audit→SIEM, red-team queue
+- **Detection, Alerting & Feedback** — semantic egress DLP, embedding-exposure detector, anomaly detection, drift loop, audit→SIEM, red-team queue
 
-Every component is tagged with its OWASP GenAI LLM Top 10 (2026) category (LLM01–LLM10).
+Risk and control components are annotated with the applicable OWASP GenAI LLM Top 10
+2026 categories (LLM01–LLM10).
 
 ![C4 Level 3 — Private-data exposure controls across AI surfaces](04-data-exposure-controls.png)
 
@@ -75,10 +76,6 @@ private data passes through **Ingestion → Runtime/LLM → Supply Chain → Pos
 leak that starts at ingestion is only contained if every later layer holds.
 
 ![LLM private-data control layers across the AI lifecycle](linkedin-c4-layers.png)
-
-The abstract hero used for the LinkedIn article:
-
-![LLM private-data exposure hero](linkedin-hero.png)
 
 ## Diagram sources
 
@@ -97,21 +94,23 @@ plantuml -tpng 01-context.puml 02-container.puml 03-component.puml 04-data-expos
 
 ## OWASP coverage
 
-Every category of the **OWASP GenAI LLM Top 10 (2026)** is covered by at least one surface
-in `04-data-exposure-controls.puml`:
+Every category of the **OWASP GenAI LLM Top 10 2026** is covered by at least one surface
+in `04-data-exposure-controls.puml`. The category names and numbering come from the
+[official OWASP project repository](https://github.com/owasp/www-project-top-10-for-large-language-model-applications)
+and its linked [canonical 2026 source](https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/tree/main/2026/final):
 
 | OWASP 2026 | Risk | Covered by |
 |---|---|---|
 | LLM01 | Prompt Injection | analyzer, semantic search, RAG, red-team queue |
-| LLM02 | Sensitive Information Disclosure | all surfaces (ingest + semantic egress DLP + anomaly) |
-| LLM03 | Supply Chain Vulnerabilities | vendor inventory, SBOM, training-PII scan, config, provenance |
-| LLM04 | Data & Model Poisoning | semantic search, RAG, training-data scan |
-| LLM05 | Improper Output Handling | analyzer, RAG, semantic search, SIEM alerting |
-| LLM06 | Excessive Agency / Permissions | analyzer, semantic search, RAG |
-| LLM07 | System Prompt Leakage | analyzer, RAG, provider config |
-| LLM08 | Vector & Embedding Weaknesses | tokenizer, semantic search, RAG, embedding-exposure detector |
-| LLM09 | Misinformation | drift & feedback loop |
-| LLM10 | Unbounded Consumption | analyzer, tokenizer, semantic search, RAG, anomaly |
+| LLM02 | Sensitive Information Disclosure | analyzer, diagnostics, semantic search, RAG, egress DLP |
+| LLM03 | Excessive Agency | analyzer, semantic search, RAG |
+| LLM04 | Supply Chain | vendor inventory, SBOM, training-PII scan, config, provenance |
+| LLM05 | Data and Model Poisoning | semantic search, RAG, training-data scan |
+| LLM06 | Unbounded Consumption | tokenization/model diagnostics, cross-surface anomaly detection |
+| LLM07 | Misinformation | drift & feedback loop |
+| LLM08 | Hidden Context Exposure | model diagnostics, RAG, provider config |
+| LLM09 | Vector and Embedding Weaknesses | semantic search, RAG, embedding-exposure detector |
+| LLM10 | Improper Output Handling | analyzer, RAG, SIEM alerting |
 
 See [`05-owasp-coverage.md`](05-owasp-coverage.md) for the per-surface notes and the
 "LLM as a new type of DLP" reframe.

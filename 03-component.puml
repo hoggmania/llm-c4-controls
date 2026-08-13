@@ -3,6 +3,8 @@
 
 title C4 Level 3 — Components: Main Controls by Lifecycle Stage
 
+Person(user, "End User", "Submits requests and receives approved responses")
+
 Container_Boundary(app, "LLM-Powered Application") {
 
   Boundary(b_in, "Input Stage", "Controls applied before the model is called") {
