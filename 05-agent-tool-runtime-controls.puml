@@ -1,0 +1,84 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!pragma layout smetana
+
+title C4 Level 3 — Agent Tool & Runtime Controls\n<size:14>Authorize every action; constrain every execution; observe every outcome</size>
+
+Person(user, "End User", "Requests an outcome from the agent")
+Person(approver, "Human Approver", "Approves or rejects high-risk actions")
+
+Container_Boundary(agentSystem, "Agentic AI Application") {
+
+  Boundary(b_plan, "Action Planning", "Turn model intent into a typed action proposal") {
+    Component(agent, "Agent Orchestrator", "Agent runtime", "Plans work but cannot call external tools directly")
+    Component(proposal, "Structured Action Builder", "Schema-bound adapter", "Produces tool, operation, resource, parameters and expected side effects")
+    Component(registry, "Tool / MCP Registry", "Allowlist", "Approved tools, operations, owners, schemas and risk tiers")
+  }
+
+  Boundary(b_auth, "Authorization & Approval", "Decide whether this subject may perform this exact action") {
+    Component(identity, "Identity & Delegation Context", "OIDC / workload identity", "Binds user, agent, tenant, purpose and delegated authority")
+    Component(param, "Parameter & Schema Validator", "Validator", "Canonicalizes parameters; rejects injection, traversal and out-of-bounds values")
+    Component(pdp, "Tool Policy Decision Point", "ABAC / policy engine", "Enforces allowlist, least privilege, tenant scope and read/write authorization")
+    Component(risk, "Action Risk Classifier", "Rules + classifier", "Flags destructive, irreversible, financial, privileged or bulk-export actions")
+    Component(approval, "Approval Gate", "Workflow", "Requires informed, time-bound approval for high-risk actions")
+  }
+
+  Boundary(b_exec, "Constrained Execution", "No external action bypasses this boundary") {
+    Component(credential, "Credential Broker", "STS / secrets broker", "Issues short-lived, tool- and resource-scoped credentials after authorization")
+    Component(txn, "Transaction & Idempotency Guard", "State controller", "Enforces spend/row/change limits, deduplication, dry-run and rollback where supported")
+    Component(proxy, "Tool Execution Proxy", "Sandbox / egress gateway", "Executes approved calls with network, filesystem and process isolation")
+    Component(result, "Tool Result Validator", "Schema + content filter", "Validates provenance and schema; blocks hostile or sensitive tool output")
+  }
+
+  Boundary(b_runtime, "Runtime Safety & Operations", "Bound resource use, contain failure and preserve evidence") {
+    Component(governor, "Runtime Governor", "Quota service", "Rate, concurrency, step, token, time and cost budgets per user and tenant")
+    Component(resilience, "Resilience Controller", "Runtime policy", "Deadlines, bounded retries with backoff, circuit breakers and safe fallback")
+    Component(audit, "Audit & Trace Pipeline", "Append-only telemetry", "Records proposal, identity, policy, approval, execution, result, latency, tokens and cost")
+    Component(kill, "Kill Switch & Incident Control", "Operations control", "Revokes tools or credentials and stops active runs during an incident")
+  }
+}
+
+System_Ext(tool, "External Tool / MCP Server", "Jira, Git, database, API, cloud or local tool")
+System_Ext(siem, "SIEM / LLMOps", "Alerting, investigation, evaluation and cost monitoring")
+
+Rel(user, agent, "Requests outcome", "authenticated session")
+Rel(agent, proposal, "Proposes action", "typed intent")
+Rel(registry, proposal, "Supplies approved tool schemas", "allowlisted definitions")
+Rel(proposal, param, "Candidate action", "untrusted until validated")
+Rel(param, pdp, "Canonical action", "tool + operation + resource + parameters")
+Rel(identity, pdp, "Subject and delegated authority", "user / agent / tenant / purpose")
+Rel(registry, pdp, "Allowlist and risk metadata", "versioned policy input")
+Rel(pdp, risk, "Authorized action", "policy decision + obligations")
+Rel(risk, approval, "High-risk action", "approval required")
+Rel(approver, approval, "Approve / reject", "explicit scope and expiry")
+Rel(risk, governor, "Low-risk action", "automatic path")
+Rel(approval, governor, "Approved action", "signed approval context")
+Rel(governor, credential, "Admits run within budgets", "deadline + resource envelope")
+Rel(credential, txn, "Scoped execution grant", "short-lived credential reference")
+Rel(txn, proxy, "Bounded, idempotent action", "dry-run / commit policy")
+Rel(proxy, tool, "Executes authorized call", "restricted egress + scoped credential")
+Rel(tool, result, "Untrusted tool result", "data + provenance")
+Rel(result, agent, "Validated observation", "typed, filtered result")
+Rel(agent, user, "Returns outcome", "response")
+
+Rel(governor, resilience, "Applies deadline and retry policy", "bounded execution")
+Rel(resilience, proxy, "Controls attempts and circuit state", "fail closed / safe fallback")
+Rel(kill, governor, "Stop runs / revoke admission", "incident response")
+Rel(kill, credential, "Revoke active grants", "incident response")
+
+Rel(proposal, audit, "Record proposed action", "trace")
+Rel(pdp, audit, "Record decision and policy version", "trace")
+Rel(approval, audit, "Record approver and scope", "trace")
+Rel(proxy, audit, "Record attempts, side effects and latency", "trace")
+Rel(result, audit, "Record validation and outcome", "trace")
+Rel(governor, audit, "Record token, time and cost use", "metrics")
+Rel(audit, siem, "Alerts, traces and metrics", "immutable export")
+
+note bottom of b_exec
+  <b>Non-bypass rule:</b> the agent has no direct tool credentials or network path.
+  A tool call is valid only when its canonical parameters, policy decision,
+  approval obligations, budget envelope and scoped credential refer to the same
+  immutable action identifier. Tool results are untrusted input to the next step.
+end note
+
+@enduml

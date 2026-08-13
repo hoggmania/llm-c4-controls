@@ -1,8 +1,8 @@
 # Architecture — C4 Controls for Private-Data Exposure in AI Systems
 
 This page explains the C4 model used in this repo and how the diagrams map onto the
-private-data-exposure story told in [`article.md`](article.md). It covers the four
-diagram levels and the OWASP GenAI LLM Top 10 2026 coverage in
+private-data-exposure story told in [`article.md`](article.md). It covers the five
+diagram views and the OWASP GenAI LLM Top 10 2026 coverage in
 [`05-owasp-coverage.md`](05-owasp-coverage.md).
 
 All diagrams are rendered with the native PlantUML binary (v1.2026.6, no JRE required)
@@ -17,7 +17,7 @@ audience sees the right level of detail without drowning in the rest.
 For LLM privacy, C4 is the right shape because "private data leaks in AI" is not one
 risk with one control — it is several distinct surfaces (analyzers, tokenization and model diagnostics, semantic
 search, RAG) plus supply-chain and post-usage concerns, each needing its own control.
-The four levels below walk from *who/what is involved* down to *which control sits where*.
+The five views below walk from *who/what is involved* down to *which control sits where*.
 
 | Level | Question it answers | Diagram |
 |---|---|---|
@@ -25,6 +25,7 @@ The four levels below walk from *who/what is involved* down to *which control si
 | 2 — Container | What are the runtime building blocks and where do controls live? | `02-container.png` |
 | 3 — Component | Which controls sit in which lifecycle stage? | `03-component.png` |
 | 3 — Data-exposure | Private-data exposure across the four surfaces + supply chain + post-usage | `04-data-exposure-controls.png` |
+| 3 — Agent tools/runtime | How are tool actions authorized, constrained, executed and observed? | `05-agent-tool-runtime-controls.png` |
 
 ## Level 1 — System Context
 
@@ -69,6 +70,23 @@ Risk and control components are annotated with the applicable OWASP GenAI LLM To
 
 ![C4 Level 3 — Private-data exposure controls across AI surfaces](04-data-exposure-controls.png)
 
+## Level 3 — Agent tool and runtime controls
+
+Agents can change external state, so text guardrails alone are not an authorization
+boundary. This companion view makes every action pass through a non-bypassable path:
+
+- **Action planning** — the model produces a typed proposal using an allowlisted tool/MCP registry; it has no direct tool credentials.
+- **Authorization and approval** — canonical parameter validation precedes an identity- and resource-aware policy decision; destructive, financial, privileged and bulk-export actions require explicit human approval.
+- **Constrained execution** — short-lived scoped credentials, transaction limits, idempotency, dry-run/rollback controls and an isolated tool proxy bound the action and its side effects.
+- **Runtime safety** — rate, concurrency, step, token, time and cost budgets combine with deadlines, bounded retry/backoff, circuit breakers, safe fallback and an incident kill switch.
+- **Evidence** — proposals, policy versions, approvals, attempts, side effects, results, latency, tokens and cost are exported through an append-only audit pipeline.
+
+Tool results are treated as untrusted input before they can influence the agent's next
+step. A shared immutable action identifier binds the proposal, decision, approval,
+budget envelope and execution grant so none can be replayed for a different action.
+
+![C4 Level 3 — Agent tool and runtime controls](05-agent-tool-runtime-controls.png)
+
 ## Visual summary (LinkedIn banner)
 
 The banner reduces the architecture to four labeled, connected visual layers:
@@ -95,13 +113,14 @@ The `.puml` files are the authoritative artifacts. They use the C4-PlantUML macr
 
 ```bash
 # native PlantUML binary (no JRE needed): https://github.com/plantuml/plantuml/releases
-plantuml -tpng 01-context.puml 02-container.puml 03-component.puml 04-data-exposure-controls.puml
+plantuml -tpng 01-context.puml 02-container.puml 03-component.puml 04-data-exposure-controls.puml 05-agent-tool-runtime-controls.puml
 ```
 
 - [`01-context.puml`](01-context.puml) · [`01-context.png`](01-context.png)
 - [`02-container.puml`](02-container.puml) · [`02-container.png`](02-container.png)
 - [`03-component.puml`](03-component.puml) · [`03-component.png`](03-component.png)
 - [`04-data-exposure-controls.puml`](04-data-exposure-controls.puml) · [`04-data-exposure-controls.png`](04-data-exposure-controls.png)
+- [`05-agent-tool-runtime-controls.puml`](05-agent-tool-runtime-controls.puml) · [`05-agent-tool-runtime-controls.png`](05-agent-tool-runtime-controls.png)
 
 ## OWASP coverage
 
