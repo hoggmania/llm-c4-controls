@@ -18,6 +18,9 @@ from the app it watches.
 OWASP mappings use the [official OWASP project repository](https://github.com/owasp/www-project-top-10-for-large-language-model-applications),
 which identifies the 2026 release as current and links to its
 [canonical Markdown source](https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/tree/main/2026/final).
+Agent tool/runtime mappings use the separate [OWASP Top 10 for Agentic Applications
+2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
+as their primary framework.
 
 ## Files
 
@@ -27,8 +30,8 @@ which identifies the 2026 release as current and links to its
 | `02-container.puml` | C4 Level 2 — Containers: where controls live |
 | `03-component.puml` | C4 Level 3 — Components: controls by lifecycle stage |
 | `04-data-exposure-controls.puml` | C4 Level 3 — Private-data exposure across surfaces, mapped to OWASP GenAI LLM Top 10 2026 |
-| `05-agent-tool-runtime-controls.puml` | C4 Level 3 — Agent tool/MCP authorization, constrained execution, runtime resilience and audit |
-| `05-owasp-coverage.md` | Full OWASP GenAI LLM Top 10 2026 coverage matrix + surface notes |
+| `05-agent-tool-runtime-controls.puml` | C4 Level 3 — Agent tool/MCP and runtime controls, mapped primarily to OWASP Agentic Top 10 2026 and secondarily to OWASP GenAI LLM Top 10 2026 |
+| `05-owasp-coverage.md` | OWASP GenAI LLM and Agentic Top 10 2026 coverage matrices + surface notes |
 | `article.md` | Long-form article: "Where Private Data Actually Leaks in AI Systems" |
 
 ## Render the diagrams

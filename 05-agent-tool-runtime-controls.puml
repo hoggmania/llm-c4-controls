@@ -2,7 +2,7 @@
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 !pragma layout smetana
 
-title C4 Level 3 — Agent Tool & Runtime Controls\n<size:14>Authorize every action; constrain every execution; observe every outcome</size>
+title C4 Level 3 — Agent Tool & Runtime Controls\n<size:14>OWASP Agentic Top 10 2026 (primary) + OWASP GenAI LLM Top 10 2026 (secondary)</size>
 
 Person(user, "End User", "Requests an outcome from the agent")
 Person(approver, "Human Approver", "Approves or rejects high-risk actions")
@@ -10,35 +10,35 @@ Person(approver, "Human Approver", "Approves or rejects high-risk actions")
 Container_Boundary(agentSystem, "Agentic AI Application") {
 
   Boundary(b_plan, "Action Planning", "Turn model intent into a typed action proposal") {
-    Component(agent, "Agent Orchestrator", "Agent runtime", "Plans work but cannot call external tools directly")
-    Component(proposal, "Structured Action Builder", "Schema-bound adapter", "Produces tool, operation, resource, parameters and expected side effects")
-    Component(registry, "Tool / MCP Registry", "Allowlist", "Approved tools, operations, owners, schemas and risk tiers")
+    Component(agent, "Agent Orchestrator", "Agent runtime", "Plans work but cannot call external tools directly. [ASI01, ASI02; LLM03]")
+    Component(proposal, "Structured Action Builder", "Schema-bound adapter", "Produces tool, operation, resource, parameters and expected side effects. [ASI02, ASI09; LLM03, LLM10]")
+    Component(registry, "Tool / MCP Registry", "Allowlist", "Approved tools, operations, owners, schemas and risk tiers. [ASI02, ASI04; LLM04]")
   }
 
   Boundary(b_auth, "Authorization & Approval", "Decide whether this subject may perform this exact action") {
-    Component(identity, "Identity & Delegation Context", "OIDC / workload identity", "Binds user, agent, tenant, purpose and delegated authority")
-    Component(param, "Parameter & Schema Validator", "Validator", "Canonicalizes parameters; rejects injection, traversal and out-of-bounds values")
-    Component(pdp, "Tool Policy Decision Point", "ABAC / policy engine", "Enforces allowlist, least privilege, tenant scope and read/write authorization")
-    Component(risk, "Action Risk Classifier", "Rules + classifier", "Flags destructive, irreversible, financial, privileged or bulk-export actions")
-    Component(approval, "Approval Gate", "Workflow", "Requires informed, time-bound approval for high-risk actions")
+    Component(identity, "Identity & Delegation Context", "OIDC / workload identity", "Binds user, agent, tenant, purpose and delegated authority. [ASI03, ASI07; LLM02, LLM03]")
+    Component(param, "Parameter & Schema Validator", "Validator", "Canonicalizes parameters; rejects injection, traversal and out-of-bounds values. [ASI02, ASI05; LLM01, LLM10]")
+    Component(pdp, "Tool Policy Decision Point", "ABAC / policy engine", "Enforces allowlist, least privilege, tenant scope and read/write authorization. [ASI02, ASI03; LLM03]")
+    Component(risk, "Action Risk Classifier", "Rules + classifier", "Flags destructive, irreversible, financial, privileged or bulk-export actions. [ASI02, ASI09; LLM03]")
+    Component(approval, "Approval Gate", "Workflow", "Requires informed, time-bound approval for high-risk actions. [ASI01, ASI02, ASI09; LLM03]")
   }
 
   Boundary(b_exec, "Constrained Execution", "No external action bypasses this boundary") {
-    Component(credential, "Credential Broker", "STS / secrets broker", "Issues short-lived, tool- and resource-scoped credentials after authorization")
-    Component(txn, "Transaction & Idempotency Guard", "State controller", "Enforces spend/row/change limits, deduplication, dry-run and rollback where supported")
-    Component(proxy, "Tool Execution Proxy", "Sandbox / egress gateway", "Executes approved calls with network, filesystem and process isolation")
-    Component(result, "Tool Result Validator", "Schema + content filter", "Validates provenance and schema; blocks hostile or sensitive tool output")
+    Component(credential, "Credential Broker", "STS / secrets broker", "Issues short-lived, tool- and resource-scoped credentials after authorization. [ASI03, ASI05; LLM02, LLM03]")
+    Component(txn, "Transaction & Idempotency Guard", "State controller", "Enforces spend/row/change limits, deduplication, dry-run and rollback where supported. [ASI02, ASI08; LLM03, LLM06]")
+    Component(proxy, "Tool Execution Proxy", "Sandbox / egress gateway", "Executes approved calls with network, filesystem and process isolation. [ASI02, ASI05, ASI07; LLM03, LLM10]")
+    Component(result, "Tool Result Validator", "Schema + content filter", "Validates provenance and schema; blocks hostile or sensitive tool output. [ASI01, ASI06, ASI07; LLM01, LLM02, LLM10]")
   }
 
   Boundary(b_runtime, "Runtime Safety & Operations", "Bound resource use, contain failure and preserve evidence") {
-    Component(governor, "Runtime Governor", "Quota service", "Rate, concurrency, step, token, time and cost budgets per user and tenant")
-    Component(resilience, "Resilience Controller", "Runtime policy", "Deadlines, bounded retries with backoff, circuit breakers and safe fallback")
-    Component(audit, "Audit & Trace Pipeline", "Append-only telemetry", "Records proposal, identity, policy, approval, execution, result, latency, tokens and cost")
-    Component(kill, "Kill Switch & Incident Control", "Operations control", "Revokes tools or credentials and stops active runs during an incident")
+    Component(governor, "Runtime Governor", "Quota service", "Rate, concurrency, step, token, time and cost budgets per user and tenant. [ASI02, ASI08; LLM06]")
+    Component(resilience, "Resilience Controller", "Runtime policy", "Deadlines, bounded retries with backoff, circuit breakers and safe fallback. [ASI08; LLM06]")
+    Component(audit, "Audit & Trace Pipeline", "Append-only telemetry", "Records proposal, identity, policy, approval, execution, result, latency, tokens and cost. [ASI08, ASI09, ASI10; LLM02, LLM06]")
+    Component(kill, "Kill Switch & Incident Control", "Operations control", "Revokes tools or credentials and stops active runs during an incident. [ASI08, ASI10; LLM03]")
   }
 }
 
-System_Ext(tool, "External Tool / MCP Server", "Jira, Git, database, API, cloud or local tool")
+System_Ext(tool, "External Tool / MCP Server", "Jira, Git, database, API, cloud or local tool. [ASI04, ASI07]")
 System_Ext(siem, "SIEM / LLMOps", "Alerting, investigation, evaluation and cost monitoring")
 
 Rel(user, agent, "Requests outcome", "authenticated session")
@@ -79,6 +79,16 @@ note bottom of b_exec
   A tool call is valid only when its canonical parameters, policy decision,
   approval obligations, budget envelope and scoped credential refer to the same
   immutable action identifier. Tool results are untrusted input to the next step.
+end note
+
+note bottom of agentSystem
+  <b>OWASP mapping scope (2026 editions):</b>
+  Primary: ASI01-ASI10 (Agentic Applications). Secondary: LLM01, LLM02,
+  LLM03, LLM04, LLM06 and LLM10 (GenAI LLM Applications).
+  Partial coverage remains for ASI01 goal integrity, ASI04 tool signing/pinning/
+  attestation, ASI06 persistent memory, ASI07 agent-to-agent protocols and
+  ASI10 per-agent behavioral attestation. LLM05, LLM07, LLM08 and LLM09 are covered
+  primarily by 04-data-exposure-controls.puml, not this execution view.
 end note
 
 @enduml

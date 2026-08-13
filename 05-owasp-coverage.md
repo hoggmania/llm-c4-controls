@@ -1,4 +1,4 @@
-# OWASP GenAI LLM Top 10 2026 — Private-Data Exposure Coverage Matrix
+# OWASP GenAI LLM and Agentic Top 10 2026 — Coverage Matrices
 
 Maps the [OWASP GenAI LLM Top 10 2026](https://github.com/owasp/www-project-top-10-for-large-language-model-applications)
 to the four AI surfaces plus the Supply Chain and Post-Usage Alerting layers from
@@ -19,6 +19,39 @@ in its active source repository.
 | **LLM08** | Hidden Context Exposure | Model diagnostics, RAG, Provider config | `tok_gate`, `rag_out`, `sc_cfg` |
 | **LLM09** | Vector and Embedding Weaknesses | Semantic Search, RAG, Emb-exposure detector | `ss_enc`, `ss_acl`, `rag_acl`, `post_emb` |
 | **LLM10** | Improper Output Handling | Analyzer, RAG, SIEM alerting | `an_out`, `rag_out`, `post_alert` |
+
+## Agent tool and runtime mapping
+
+`05-agent-tool-runtime-controls.puml` uses the [OWASP Top 10 for Agentic Applications
+2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
+as its primary framework. Component descriptions carry `ASIxx` identifiers and, after
+the semicolon, applicable `LLMxx` identifiers from the GenAI LLM Top 10 2026.
+
+| OWASP Agentic 2026 | Risk | Controls in the diagram | Coverage |
+|---|---|---|---|
+| **ASI01** | Agent Goal Hijack | `agent`, `approval`, `result` | Partial — constrains consequences and untrusted results; no dedicated goal-integrity monitor |
+| **ASI02** | Tool Misuse & Exploitation | `registry`, `param`, `pdp`, `risk`, `approval`, `txn`, `proxy`, `governor` | Strong |
+| **ASI03** | Identity & Privilege Abuse | `identity`, `pdp`, `credential` | Strong |
+| **ASI04** | Agentic Supply Chain Vulnerabilities | `registry`, external `tool` boundary | Partial — inventory/allowlisting only; signing, version pinning and attestation remain gaps |
+| **ASI05** | Unexpected Code Execution | `param`, `credential`, `proxy` | Strong — deterministic validation, scoped grants and sandboxed execution |
+| **ASI06** | Memory & Context Poisoning | `result` | Partial — validates tool results but does not model persistent agent memory |
+| **ASI07** | Insecure Inter-Agent Communication | `identity`, `proxy`, `result`, external `tool` boundary | Partial — MCP/tool exchange is covered; agent-to-agent protocols are not |
+| **ASI08** | Cascading Failures | `txn`, `governor`, `resilience`, `audit`, `kill` | Strong |
+| **ASI09** | Human-Agent Trust Exploitation | `proposal`, `risk`, `approval`, `audit` | Moderate — scoped approval and evidence are present; approval fatigue remains a human/process risk |
+| **ASI10** | Rogue Agents | `audit`, `kill` | Partial — detection, revocation and containment are present; per-agent behavioral attestation is not |
+
+The secondary LLM mapping is deliberately narrower; LLM categories that primarily
+concern training data, misinformation, hidden model context or embeddings remain in the
+data-exposure view rather than being forced into the agent execution view.
+
+| OWASP GenAI LLM 2026 | Agent/runtime controls in diagram 05 |
+|---|---|
+| **LLM01** Prompt Injection | `param`, `result` — validate proposed parameters and untrusted tool output |
+| **LLM02** Sensitive Information Disclosure | `identity`, `credential`, `result`, `audit` — minimize access and detect sensitive results |
+| **LLM03** Excessive Agency | `agent`, `proposal`, `identity`, `pdp`, `risk`, `approval`, `credential`, `txn`, `proxy`, `kill` |
+| **LLM04** Supply Chain | `registry` — partial tool inventory/allowlisting coverage |
+| **LLM06** Unbounded Consumption | `txn`, `governor`, `resilience`, `audit` |
+| **LLM10** Improper Output Handling | `proposal`, `param`, `proxy`, `result` — schema-bound calls and validated results |
 
 ## Surface-specific exposure notes
 

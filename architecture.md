@@ -85,6 +85,12 @@ Tool results are treated as untrusted input before they can influence the agent'
 step. A shared immutable action identifier binds the proposal, decision, approval,
 budget envelope and execution grant so none can be replayed for a different action.
 
+Components are mapped primarily to the **OWASP Top 10 for Agentic Applications 2026**
+(`ASI01`–`ASI10`) and secondarily to the applicable **OWASP GenAI LLM Top 10 2026**
+categories. The diagram marks incomplete coverage explicitly: goal integrity, signed and
+pinned tool provenance, persistent memory controls, agent-to-agent protocols and
+per-agent behavioral attestation need additional components for full treatment.
+
 ![C4 Level 3 — Agent tool and runtime controls](05-agent-tool-runtime-controls.png)
 
 ## Visual summary (LinkedIn banner)
@@ -142,5 +148,10 @@ and its linked [canonical 2026 source](https://github.com/GenAI-Security-Project
 | LLM09 | Vector and Embedding Weaknesses | semantic search, RAG, embedding-exposure detector |
 | LLM10 | Improper Output Handling | analyzer, RAG, SIEM alerting |
 
+The agent tool/runtime view is mapped primarily to the separate [OWASP Top 10 for
+Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
+and secondarily to applicable LLM categories. It covers every `ASI` category, with
+partial coverage explicitly identified rather than treated as complete mitigation.
+
 See [`05-owasp-coverage.md`](05-owasp-coverage.md) for the per-surface notes and the
-"LLM as a new type of DLP" reframe.
+two coverage matrices, plus the "LLM as a new type of DLP" reframe.
