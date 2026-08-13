@@ -13,7 +13,9 @@ actually leaks in AI systems** — beyond the usual "one guardrails box":
 
 The central reframe: **the LLM is a new type of DLP** — a semantic inspector that
 catches leakage regex misses, but only if deployed as a *separate* model instance
-from the app it watches.
+from the app it watches. For agents, the companion rule is: **the model is not an
+authorization boundary**. It must not hold direct tool credentials or have a direct
+network path to external actions.
 
 OWASP mappings use the [official OWASP project repository](https://github.com/owasp/www-project-top-10-for-large-language-model-applications),
 which identifies the 2026 release as current and links to its
@@ -21,6 +23,24 @@ which identifies the 2026 release as current and links to its
 Agent tool/runtime mappings use the separate [OWASP Top 10 for Agentic Applications
 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
 as their primary framework.
+
+## Two detailed control views
+
+The Level 3 diagrams separate two related questions that a single guardrails box cannot
+answer:
+
+- **Private-data exposure (`04`)** — where sensitive data leaks across analyzers,
+  tokenization and diagnostics, semantic search, RAG, supply chain and post-usage
+  monitoring. Components are mapped to `LLM01`–`LLM10` from the OWASP GenAI LLM Top
+  10 2026.
+- **Agent tool/runtime controls (`05`)** — how a proposed tool or MCP action is typed,
+  validated, authorized, approved, constrained, executed and audited. Components are
+  mapped primarily to `ASI01`–`ASI10` and secondarily to the applicable LLM risks.
+
+The agent view covers every ASI category but does not claim complete mitigation. It
+marks partial coverage for goal integrity, signed/pinned tool provenance, persistent
+memory, agent-to-agent protocols and per-agent behavioral attestation. The full
+component crosswalk and coverage strength are in [`05-owasp-coverage.md`](05-owasp-coverage.md).
 
 ## Files
 

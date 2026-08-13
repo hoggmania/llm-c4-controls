@@ -1,12 +1,12 @@
 # Where Private Data Actually Leaks in AI Systems — and Why "Guardrails" Diagrams Keep Missing It
 
-*How to model the real exposure surfaces — AI analyzers, tokenization and model diagnostics, semantic search, RAG, supply chain, and the post-usage blind spot — and why the LLM is itself a new kind of DLP.*
+*How to model the real exposure surfaces — AI analyzers, tokenization and model diagnostics, semantic search, RAG, agent tools, supply chain, and the post-usage blind spot — and why the LLM is itself a new kind of DLP.*
 
-Most "AI security" diagrams are theater. They draw a box labeled *Guardrails* between the user and the model, slap a shield emoji on it, and call the risk closed. Then private data leaks anyway — through the vector database nobody classified as sensitive, through a third-party text-processing service nobody treated as an exposure surface, or through a summarization feature that shipped SIEM logs to a third party.
+Most "AI security" diagrams are theater. They draw a box labeled *Guardrails* between the user and the model, slap a shield emoji on it, and call the risk closed. Then private data leaks anyway — through the vector database nobody classified as sensitive, through a third-party text-processing service nobody treated as an exposure surface, through a summarization feature that shipped SIEM logs to a third party, or through an agent that used an over-privileged tool to move the data somewhere it should never have gone.
 
 The problem isn't that we lack controls. It's that we model the problem wrong. We treat "LLM privacy" as a single risk with a single control, when it is really five or six distinct exposure surfaces, each with its own leak mechanism, each needing its own control — and then a second layer that watches whether any of it actually held.
 
-This is a C4 modeling problem. The C4 model (Context → Container → Component) is built for exactly this: progressively disclosing where the risk lives as you zoom in. At Component level, the private-data exposure story becomes concrete and checkable. Here's what that view shows.
+This is a C4 modeling problem. The C4 model (Context → Container → Component) is built for exactly this: progressively disclosing where the risk lives as you zoom in. At Component level, two complementary views make the controls concrete and checkable: one follows private data across AI surfaces; the other follows an agent action from model intent through authorization, constrained execution and audit.
 
 ---
 
@@ -41,6 +41,26 @@ The received wisdom is that embeddings are "unrecognizable" vectors. The researc
 RAG has a particularly direct privacy failure mode: an over-broad retriever returns documents the user isn't authorized to see, and the model diligently includes the sensitive content in its answer. Add indirect prompt injection embedded in a retrieved document (LLM01), and the result can be data exfiltration wrapped in a helpful citation.
 
 - **Control pattern:** doc-level *pre-retrieval* ACL (don't retrieve what the user can't see), retrieved-content injection screening, post-retrieval PII redaction, an output guardrail that refuses to echo secrets and cites sources, then egress DLP on the final answer too.
+
+---
+
+## When the model can act: agent tool and runtime controls
+
+An agent changes the threat model because model output is no longer only text shown to a user. It can become a database query, Git operation, cloud API call, payment, email or shell command. Prompt injection becomes materially more dangerous when the compromised model can combine untrusted input, private data and an external communication or state-change capability.
+
+The control boundary therefore cannot be another prompt. The application must mediate every action through deterministic components that the model cannot bypass:
+
+1. **Build a typed action proposal.** Bind the tool, operation, resource, parameters and expected side effects to an immutable action identifier. The model never receives direct credentials.
+2. **Validate and authorize the exact action.** Canonicalize parameters before an identity-, tenant-, resource- and purpose-aware policy decision. Separate read permission from write permission.
+3. **Escalate risk, not prose.** Destructive, irreversible, financial, privileged and bulk-export actions go to a human approval gate that shows the exact scoped action and expiry.
+4. **Constrain execution.** Issue short-lived tool- and resource-scoped credentials; enforce transaction limits, idempotency, dry-run and rollback; execute through a sandboxed tool/MCP proxy.
+5. **Treat tool results as hostile input.** Validate provenance, schema and sensitive content before the result can enter the next agent step.
+6. **Bound the run.** Apply rate, concurrency, step, token, time and cost budgets, plus deadlines, bounded retries, circuit breakers, safe fallback and an incident kill switch.
+7. **Preserve evidence.** Record the proposal, identity, policy version, approval, attempts, side effects, result, latency, tokens and cost in an append-only trace.
+
+This view maps primarily to the [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/), especially Tool Misuse, Identity and Privilege Abuse, Unexpected Code Execution and Cascading Failures. It maps secondarily to the LLM risks that feed or amplify those failures: Prompt Injection, Sensitive Information Disclosure, Excessive Agency, Supply Chain, Unbounded Consumption and Improper Output Handling.
+
+Mapping does not mean complete mitigation. The current component view deliberately marks partial treatment for agent goal integrity, signed and pinned tool provenance, persistent memory, agent-to-agent protocols and per-agent behavioral attestation. Those are additional architecture decisions, not labels to hide inside a generic guardrail.
 
 ---
 
@@ -83,7 +103,7 @@ Treat the LLM as a semantic DLP, not just a risky endpoint. And never let one mo
 
 ---
 
-## OWASP GenAI LLM Top 10 2026 coverage
+## OWASP GenAI LLM and Agentic Top 10 2026 coverage
 
 This maps to the [OWASP GenAI LLM Top 10 2026 source repository](https://github.com/owasp/www-project-top-10-for-large-language-model-applications), which points to the active [canonical 2026 Markdown](https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/tree/main/2026/final). Earlier editions use different numbering, so the edition should always be stated explicitly. Every category is covered by at least one surface or cross-cutting control:
 
@@ -100,6 +120,23 @@ This maps to the [OWASP GenAI LLM Top 10 2026 source repository](https://github.
 | LLM09 | Vector and Embedding Weaknesses | semantic search, RAG, embedding-exposure detector |
 | LLM10 | Improper Output Handling | analyzer, RAG, SIEM alerting |
 
+The agent tool/runtime view uses the separate Agentic Top 10 as its primary framework:
+
+| OWASP Agentic 2026 | Risk | Main controls in the agent view | Coverage |
+|---|---|---|---|
+| ASI01 | Agent Goal Hijack | constrained orchestrator, approval, untrusted-result validation | Partial |
+| ASI02 | Tool Misuse & Exploitation | allowlist, parameter validation, policy decision, transaction guard, proxy | Strong |
+| ASI03 | Identity & Privilege Abuse | delegation context, policy decision, scoped credential broker | Strong |
+| ASI04 | Agentic Supply Chain Vulnerabilities | tool/MCP registry | Partial |
+| ASI05 | Unexpected Code Execution | deterministic validation, scoped grants, sandboxed proxy | Strong |
+| ASI06 | Memory & Context Poisoning | tool-result validation | Partial |
+| ASI07 | Insecure Inter-Agent Communication | authenticated MCP boundary and result validation | Partial |
+| ASI08 | Cascading Failures | budgets, idempotency, circuit breakers, audit and kill switch | Strong |
+| ASI09 | Human-Agent Trust Exploitation | scoped proposal, risk classification, approval evidence | Moderate |
+| ASI10 | Rogue Agents | audit, revocation and kill switch | Partial |
+
+The detailed component-to-category crosswalk, including the secondary LLM mapping, is in [`05-owasp-coverage.md`](05-owasp-coverage.md).
+
 ---
 
 ## What to do Monday
@@ -107,7 +144,8 @@ This maps to the [OWASP GenAI LLM Top 10 2026 source repository](https://github.
 1. **Stop drawing one "Guardrails" box.** Model the surfaces separately. If your diagram cannot distinguish tokenization, model diagnostics and embeddings, it is incomplete.
 2. **Classify your vector database as sensitive.** Encrypt it, ACL it per tenant, and put an exposure detector on it. This is the highest-leverage, lowest-attention item on the list.
 3. **Add the post-usage layer before you add more ingestion controls.** You already have input scrubbing. What you don't have is proof it worked.
-4. **Deploy your semantic DLP as a separate instance.** Same model family, different trust boundary, no shared context.
-5. **Pull the OWASP 2026 list into your threat model** and check each row against a real component — not a shield emoji.
+4. **Put every agent action behind a non-bypassable tool proxy.** The model should hold neither direct credentials nor a direct network path to tools. Bind authorization, approval, budgets and execution to the same immutable action identifier.
+5. **Deploy your semantic DLP as a separate instance.** Same model family, different trust boundary, no shared context.
+6. **Pull both applicable OWASP 2026 lists into your threat model.** Use the LLM Top 10 for model/data risks and the Agentic Top 10 for autonomous action risks; check each mapping against a real component, not a shield emoji.
 
-The diagrams that accompany this article (C4 Context, Container, and the data-exposure Component view) are on GitHub under `llm-c4-controls`. The lesson they encode is the same one a flat "guardrails" diagram hides: private data in AI does not leak in one place. It can leak in the analyzer, a third-party text processor, the vector store, the retriever, the provider, or through a failure nobody monitored after the request completed.
+The diagrams that accompany this article—C4 Context, Container, lifecycle Component, private-data exposure, and agent tool/runtime views—are on GitHub under `llm-c4-controls`. The lesson they encode is the same one a flat "guardrails" diagram hides: private data in AI does not leak in one place. It can leak in the analyzer, a third-party text processor, the vector store, the retriever or the provider; an over-privileged agent can then turn that exposure into an external action; and an unobserved failure can survive long after the request completed.
