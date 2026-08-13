@@ -1,5 +1,6 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!pragma layout smetana
 
 title C4 Level 2 — Containers: Where Controls Live in an LLM System
 

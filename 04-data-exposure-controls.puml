@@ -1,5 +1,6 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!pragma layout smetana
 
 title C4 Level 3 — Private-Data Exposure Controls across AI Surfaces
 (mapped to OWASP GenAI LLM Top 10 2026 — incl. Supply Chain & Post-Usage Alerting)

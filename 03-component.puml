@@ -1,5 +1,6 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!pragma layout smetana
 
 title C4 Level 3 — Components: Main Controls by Lifecycle Stage
 
