@@ -69,11 +69,22 @@ Risk and control components are annotated with the applicable OWASP GenAI LLM To
 
 ![C4 Level 3 — Private-data exposure controls across AI surfaces](04-data-exposure-controls.png)
 
-## Visual summary (LinkedIn assets)
+## Visual summary (LinkedIn banner)
 
-The staged-controls visual below captures the time-series / layered thesis of the article:
-private data passes through **Ingestion → Runtime/LLM → Supply Chain → Post-Usage**, and a
-leak that starts at ingestion is only contained if every later layer holds.
+The banner reduces the architecture to four labeled, connected visual layers:
+
+1. **Ingestion** — incoming data passes through a controlled entry point.
+2. **Runtime / LLM** — the application processes data inside the model boundary.
+3. **Supply chain** — linked models, providers, dependencies, and data sources form the
+   delivery chain.
+4. **Detection and feedback** — monitoring observes residual exposure and feeds findings
+   back into the controls.
+
+The single connecting line emphasizes that these are not isolated safeguards. A weakness
+in an earlier layer propagates forward, while monitoring must feed improvements back into
+ingestion and runtime controls. The labels identify the lifecycle stages, while the
+minimal symbols keep the image suitable for an article banner; the C4 diagrams remain
+the authoritative technical views.
 
 ![LLM private-data control layers across the AI lifecycle](linkedin-c4-layers.png)
 
