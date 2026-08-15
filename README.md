@@ -52,6 +52,8 @@ component crosswalk and coverage strength are in [`05-owasp-coverage.md`](05-owa
 | `04-data-exposure-controls.puml` | C4 Level 3 — Private-data exposure across surfaces, mapped to OWASP GenAI LLM Top 10 2026 |
 | `05-agent-tool-runtime-controls.puml` | C4 Level 3 — Agent tool/MCP and runtime controls, mapped primarily to OWASP Agentic Top 10 2026 and secondarily to OWASP GenAI LLM Top 10 2026 |
 | `05-owasp-coverage.md` | OWASP GenAI LLM and Agentic Top 10 2026 coverage matrices + surface notes |
+| `CANDIDATE_APPS.md` | Candidate applications (open + closed source) implementing each control, with a 41-row completeness matrix + per-control detail |
+| `candidate-apps/` | Per-cluster research tables backing `CANDIDATE_APPS.md` (tooling by control family) |
 | `article.md` | Long-form article: "Where Private Data Actually Leaks in AI Systems" |
 
 ## Render the diagrams
