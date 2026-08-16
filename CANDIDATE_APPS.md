@@ -350,6 +350,11 @@ Every control gets one verdict:
 
 5. **Honest "unsure" flags carried from research:** OpenAI Privacy Filter license & on-prem viability; Private AI on-prem terms; Llama Guard exact PII/secret coverage; vLLM per-key logprob suppression; AgentOps hard-budget enforcement; Permit/agent-specific primitives; Azure AI Search ACL GA status; Lasso/HiddenLayer/Protect AI risk specifics; HumanLayer deep red-team-queue features; Semgrep runtime param-fit.
 
+6. **"Nvidia's vs Nono.sh" are orthogonal, not competitors.** This came up via an X post comparing the two; the comparison only makes sense if you understand they defend *different boundaries* of the same system:
+   - **NVIDIA → content boundary (`04` diagram).** "Nvidia's" here means **NeMo Guardrails** (NVIDIA's open-source LLM guardrail library). It operates *on the language path* — input rails (jailbreak/injection), output rails (`an_out`), retrieval rails (`rag_scr`/`ss_val`), execution rails (`param`/`result`), and risk rails (`risk`). Already catalogued under those controls. (If the poster meant NVIDIA Morpheus instead, that's a network-threat-detection framework — less LLM-specific; NeMo is the clear LLM-security fit.)
+   - **Nono.sh → tool-execution boundary (`05` diagram).** nono operates *on the action path* — does the agent's tool call escape its sandbox? is the real credential exposed? is the call scoped? That's `registry`/`param`/`credential`/`approval`/`proxy`/`audit`/`kill`. It does **not** inspect prompt text or model output for jailbreaks/toxicity.
+   - **They stack, they don't overlap.** Best practice is NeMo on the content path + nono on the tool-execution path. Together they cover far more of the loop than either alone, but neither touches the data-exposure `04` store controls (`ss_enc`, `ss_acl`, `post_emb`) or the supply-chain `sc_*` layer. The post's implicit "which is better?" framing is the wrong axis — the real question is which boundary you're undefended on.
+
 ---
 
 *Injection-screening cluster (`an_inj`, `ss_val`, `rag_scr`, `result`) is covered in the appendix
