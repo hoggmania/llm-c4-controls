@@ -61,15 +61,15 @@ Every control gets one verdict:
 | 30 | `param` | Agent authZ | ASI02,05; LLM01,10 | **Partial (composite)** | Pydantic, Zod, GuardrailsAI, Rebuff |
 | 31 | `pdp` | Agent authZ | ASI02,03; LLM03 | **Full** (repurpose) | OPA, Cerbos, OpenFGA, SpiceDB / AWS Verified Permissions |
 | 32 | `risk` | Agent approval | ASI02,09; LLM03 | **Partial (mostly custom)** | OPA rules, NeMo / Lakera, Lasso, HiddenLayer |
-| 33 | `approval` | Agent approval | ASI01,02,09; LLM03 | **Partial (composite)** | HumanLayer, LangGraph, Temporal / MS Agent+Azure, Jira |
-| 34 | `credential` | Agent exec | ASI03,05; LLM02,03 | **Full** (repurpose) | Vault, Boundary, OIDC xchange / AWS/GCP/Azure STS, CyberArk |
+| 33 | `approval` | Agent approval | ASI01,02,09; LLM03 | **Partial (composite)** | nono, HumanLayer, LangGraph, Temporal / MS Agent+Azure, Jira |
+| 34 | `credential` | Agent exec | ASI03,05; LLM02,03 | **Full** (repurpose) | nono (phantom-token boundary), Vault, Boundary / AWS/GCP/Azure STS, CyberArk |
 | 35 | `txn` | Agent exec | ASI02,08; LLM03,06 | **Partial (composite)** | Temporal, Cadence, DB Outbox, idempotency keys |
-| 36 | `proxy` | Agent exec | ASI02,05,07; LLM03,10 | **Partial (composite)** | ToolHive, E2B, gVisor, Envoy / Modal, Northflank |
-| 37 | `result` | Agent exec | ASI01,06,07; LLM01,02,10 | **Partial (composite)** | ToolHive/MCP Guardian, OPA, GuardrailsAI / Lakera, Azure |
+| 36 | `proxy` | Agent exec | ASI02,05,07; LLM03,10 | **Partial (composite)** | **nono** (kernel sandbox collapses enforcement spine), ToolHive, E2B, gVisor / Modal, Northflank |
+| 37 | `result` | Agent exec | ASI01,06,07; LLM01,02,10 | **Partial (composite)** | nono (trusted-boundary), ToolHive/MCP Guardian, OPA, GuardrailsAI / Lakera, Azure |
 | 38 | `governor` | Agent runtime | ASI02,08; LLM06 | **Partial (composite)** | LiteLLM, Portkey, LangGraph, OPA / Cloudflare, Bedrock |
 | 39 | `resilience` | Agent runtime | ASI08; LLM06 | **Full** (repurpose) | Temporal, Tenacity, resilience4j, Polly, Envoy |
-| 40 | `audit` | Agent ops | ASI08,09,10; LLM02,06 | **Partial (composite)** | Langfuse, OTel, MLflow / LangSmith, CloudTrail (WORM) |
-| 41 | `kill` | Agent ops | ASI08,10; LLM03 | **Partial (composite)** | Vault revoke, ToolHive stop, Temporal cancel, K8s / Lakera, PANW |
+| 40 | `audit` | Agent ops | ASI08,09,10; LLM02,06 | **Partial (composite)** | nono (Merkle tamper-evident), Langfuse, OTel / LangSmith, CloudTrail (WORM) |
+| 41 | `kill` | Agent ops | ASI08,10; LLM03 | **Partial (composite)** | nono (sandbox-destroy), Vault revoke, Temporal cancel, K8s / Lakera, PANW |
 
 > The repo's two Level-3 diagrams define **41 control components** — 25 across `04-data-exposure-controls.puml` (rows 1–25) and 16 across `05-agent-tool-runtime-controls.puml` (rows 26–41). Data stores (e.g. `an_store`, `tok_api`, `ss_vec`, `rag_ret`) are excluded; only components carrying an OWASP tag count. Row numbers are a convenience index, not control IDs.
 
@@ -256,10 +256,10 @@ Every control gets one verdict:
 - **Commercial:** Anthropic/OpenAI tool-use JSON Schema.
 
 ### registry — Tool / MCP Allowlist · `ASI02/04; LLM04`
-**Verdict: Partial (composite).** MCP-native options exist; generic tool registry = policy-encoded.
-- **OSS:** ToolHive (isolated MCP containers + capability model), MCP Registry spec+Smithery, mcp-proxy, FastMCP, OPA/Casbin (encode allowlist).
+**Verdict: Partial (composite).** MCP-native options exist; generic tool registry = policy-encoded. **The strongest single-tool enforcement candidate is [nono](https://nono.sh)** (Sigstore team) — kernel-enforced micro-sandboxes that pull *signed* tool profiles from registry.nono.sh, collapsing registry + param + credential + approval + audit + proxy into one agent-agnostic OSS tool (see `proxy`/`credential`/`audit` rows).
+- **OSS:** **nono** (capability broker + signed profile registry + per-invocation sandbox), ToolHive (isolated MCP containers + capability model), MCP Registry spec+Smithery, mcp-proxy, FastMCP, OPA/Casbin (encode allowlist).
 - **Commercial:** Kong/Apigee, Cloudflare MCP, Heroku MCP.
-- *Gap:* Registration ≠ authorization; you add the allowlist *policy*.
+- *Gap:* Registration ≠ authorization; you add the allowlist *policy*. Nono's signed profiles + argv policy cover the allowlist natively but still need your risk→authorization mapping.
 
 ### identity — Identity & Delegation Context (OIDC / workload identity) · `ASI03/07; LLM02/03`
 **Verdict: Full (repurpose).** Standard IdP/workload-identity tooling.
@@ -267,9 +267,9 @@ Every control gets one verdict:
 - **Commercial:** Okta/Auth0, Azure Entra.
 
 ### param — Parameter & Schema Validator (reject injection/traversal/out-of-bounds) · `ASI02/05; LLM01/10`
-**Verdict: Partial (composite).** Typed validation mature; *security* validation (injection/traversal) needs a guardrail lib or rules.
-- **OSS:** Pydantic, Zod, jsonschema/ajv, GuardrailsAI (RAIL: injection/out-of-bounds), Rebuff, custom path canonicalization.
-- *Gap:* Base validators are not security-focused; you add injection/traversal rules. Semgrep fit `unsure`.
+**Verdict: Partial (composite).** Typed validation mature; *security* validation (injection/traversal) needs a guardrail lib or rules. **nono enforces this at the kernel layer** via argv policy (caller + arguments) before any tool executes — stronger than app-level schema validation because the process tree is Landlock/Seatbelt-restricted, not merely checked.
+- **OSS:** **nono** (argv policy + capability broker), Pydantic, Zod, jsonschema/ajv, GuardrailsAI (RAIL: injection/out-of-bounds), Rebuff, custom path canonicalization.
+- *Gap:* Base validators are not security-focused; you add injection/traversal rules. Semgrep fit `unsure`. Nono covers argv/command policy but not full JSON-schema semantic validation of complex params.
 
 ### pdp — Tool Policy Decision Point (ABAC) · `ASI02/03; LLM03`
 **Verdict: Full (repurpose).** Mature policy engines.
@@ -283,13 +283,13 @@ Every control gets one verdict:
 - *Gap:* Semantic risk classification is largely a build; static rules cover the obvious cases.
 
 ### approval — Approval Gate (informed, time-bound human approval) · `ASI01/02/09; LLM03`
-**Verdict: Partial (composite).** Purpose-built HITL exists but you wire risk→approval trigger + timeout.
-- **OSS:** HumanLayer (purpose-built), LangGraph `interrupt()`, Temporal (signal+timers), Slack/email approve buttons.
+**Verdict: Partial (composite).** Purpose-built HITL exists but you wire risk→approval trigger + timeout. **nono provides this inline** — any invocation matching no argv rule pauses for a human approve/deny/timeout decision, then runs inside a scoped sandbox.
+- **OSS:** **nono** (inline human-approval on out-of-policy calls), HumanLayer (purpose-built), LangGraph `interrupt()`, Temporal (signal+timers), Slack/email approve buttons.
 - **Commercial:** MS Agent Framework + Azure Approval, Jira ticketing.
 
 ### credential — Credential Broker (short-lived, scoped creds) · `ASI03/05; LLM02/03`
-**Verdict: Full (repurpose).** Mature STS/dynamic-secret infra.
-- **OSS:** HashiCorp Vault (dynamic secrets), Boundary, OIDC token exchange (RFC 8693) + your broker.
+**Verdict: Full (repurpose).** Mature STS/dynamic-secret infra. **nono is the closest to the control's *ideal* — it never exposes the real credential to the agent at all:** the supervisor holds the secret, injects a phantom token, and swaps in the real credential only at the L7 proxy boundary, zeroising on exit.
+- **OSS:** **nono** (phantom-token boundary injection, secret never enters child), HashiCorp Vault (dynamic secrets), Boundary, OIDC token exchange (RFC 8693) + your broker.
 - **Commercial:** AWS/GCP/Azure STS, CyberArk/strongDM/Teleport, IAM Roles Anywhere.
 
 ### txn — Transaction & Idempotency Guard (limits, dedupe, dry-run, rollback) · `ASI02/08; LLM03/06`
@@ -297,13 +297,13 @@ Every control gets one verdict:
 - **OSS:** Temporal, Cadence, DB transactions + Outbox, Redis limiter, LangGraph checkpointer, idempotency-key pattern.
 
 ### proxy — Tool Execution Proxy / Sandbox / Egress Gateway · `ASI02/05/07; LLM03/10`
-**Verdict: Partial (composite).** Isolation primitives exist; tool-semantics-aware proxy is MCP-only today.
-- **OSS:** ToolHive (MCP isolated containers), E2B (Firecracker microVM), gVisor, Docker/Firecracker/Kata, Envoy/Istio egress, Squid.
+**Verdict: Partial (composite) — but [nono](https://nono.sh) collapses the enforcement spine into one OSS tool.** Isolation primitives exist; tool-semantics-aware proxy is MCP-only today *except nono*, which brokers every tool call through a kernel-enforced micro-sandbox (Landlock/Seatbelt) with argv policy, capability scoping, and an L7 egress proxy.
+- **OSS:** **nono** (kernel-enforced per-invocation sandbox + argv policy + L7 proxy + credential boundary — covers `proxy`+`param`+`credential`+`approval`+`audit` together), ToolHive (MCP isolated containers), E2B (Firecracker microVM), gVisor, Docker/Firecracker/Kata, Envoy/Istio egress, Squid.
 - **Commercial:** Modal, Northflank.
-- *Gap:* Generic egress gateways lack tool-semantics awareness; ToolHive is the only MCP-native.
+- *Gap:* Generic egress gateways lack tool-semantics awareness; ToolHive is the only MCP-native. Nono adds agent-agnostic kernel sandboxing on top, but still omits the *operational* spine (`txn`/`governor`/`resilience`/`risk`/`kill`).
 
 ### result — Tool Result Validator (schema + content filter on untrusted tool output) · `ASI01/06/07; LLM01/02/10`
-**Verdict: Partial (composite).** Validates *schema* well; *content/poison* filtering on tool output is a guardrail lib + policy job. *(see injection row for tool-output poisoning candidates)*
+**Verdict: Partial (composite).** Validates *schema* well; *content/poison* filtering on tool output is a guardrail lib + policy job. **nono changes the trust model**: because the agent never holds the real credential and every tool runs in an invocation-scoped sandbox, tool output is returned across a supervisor boundary that can strip/validate before the agent sees it — but content-level poisoning detection still needs GuardrailsAI/OPA on top. *(see injection appendix for tool-output poisoning candidates)*
 
 ### governor — Runtime Governor (rate/concurrency/step/token/time/cost budgets) · `ASI02/08; LLM06`
 **Verdict: Partial (composite).** Gateway covers rate/token/cost; *step* cap needs the agent framework.
@@ -317,34 +317,34 @@ Every control gets one verdict:
 - *Gap:* None; almost entirely generic infra.
 
 ### audit — Append-only Audit/Trace Pipeline · `ASI08/09/10; LLM02/06`
-**Verdict: Partial (composite).** Observability tools trace everything; **true append-only needs a WORM/CloudTrail-style backend.**
-- **OSS:** Langfuse, AgentOps, Helicone, OpenTelemetry, MLflow, OpenObserve/Loki/ClickHouse.
+**Verdict: Partial (composite).** Observability tools trace everything; **true append-only needs a WORM/CloudTrail-style backend — except [nono](https://nono.sh), whose per-invocation audit is hash-chained into a SHA-256 Merkle root, i.e. tamper-evident by construction** (the closest off-the-shelf match to the WORM ideal).
+- **OSS:** **nono** (Merkle-rooted, tamper-evident audit of every supervisor crossing), Langfuse, AgentOps, Helicone, OpenTelemetry, MLflow, OpenObserve/Loki/ClickHouse.
 - **Commercial:** LangSmith, AWS CloudTrail (WORM via S3 Object Lock).
-- *Gap:* Most LLM-observability DBs are mutable; bolt on WORM for immutability.
+- *Gap:* Most LLM-observability DBs are mutable; bolt on WORM for immutability. Nono's trail is verifiable but covers tool-execution events, not full proposal-lifecycle metadata.
 
 ### kill — Kill Switch & Incident Control · `ASI08/10; LLM03`
-**Verdict: Partial (composite).** **No dedicated "AI kill switch" product** — compose from the below.
-- **OSS:** Vault lease revocation, ToolHive stop/disable, Temporal cancel, Kubernetes network policies, framework stop (LangGraph `.stop()`/Anthropic stop/OpenAI cancel), Envoy circuit break.
+**Verdict: Partial (composite).** **No dedicated "AI kill switch" product** — compose from the below. **nono contributes containment**: each sandbox is destroyed on invocation exit, so a compromised tool call cannot persist or spawn outside its boundary; combined with Vault revoke + run cancel this is a credible incident response.
+- **OSS:** **nono** (per-invocation sandbox destroyed on exit — limits blast radius), Vault lease revocation, ToolHive stop/disable, Temporal cancel, Kubernetes network policies, framework stop (LangGraph `.stop()`/Anthropic stop/OpenAI cancel), Envoy circuit break.
 - **Commercial:** Lakera Guard / PANW AI Runtime Security (policy block/quarantine).
-- *Gap:* Credential revoke + run cancel + egress cut must be wired together per-component.
+- *Gap:* Credential revoke + run cancel + egress cut must be wired together per-component; nono stops the *sandbox*, not an in-flight model generation.
 
 ---
 
 ## Cross-cutting findings
 
-1. **No single product covers the full control set.** Realistic stacks:
+1. **No single product covers the full control set — but one tool now covers the *enforcement spine*.** Realistic stacks:
    - *Private-data exposure:* Presidio/Private AI (redaction) + vector-DB ACLs (ss_acl) + gateway (tok_gate/tok_rl/rag_out) + a **separate** inspector model (post_dlp) + observability (post_anom/post_drift) + SIEM forwarder (post_alert).
-   - *Agent loop:* LangGraph/AutoGen/ADK (agent+proposal) → ToolHive+OPA (registry/param/proxy) → Vault (credential) → Temporal (txn/resilience/kill) → HumanLayer (approval) → OTel+Langfuse (audit) → Vector/OTel exporters (post_alert), with a custom LLM-judge+OPA `risk` layer.
+   - *Agent loop:* the **enforcement spine** (`registry`+`param`+`credential`+`approval`+`proxy`+`audit`+partial `kill`) is now addressable by a **single OSS tool — [nono](https://nono.sh)** (kernel-enforced per-invocation sandbox, signed profiles, phantom-token credential boundary, Merkle audit, sandbox-destroy containment). The **operational spine** (`txn`/`governor`/`resilience`/`risk`) and the data-exposure + supply-chain layers remain composite/multi-tool. So: not "assemble 5 tools for the loop" — assemble nono + a transaction/resilience layer (Temporal) + the content guardrails (NeMo/GuardrailsAI) + your data/supply-chain stack.
    - *Supply chain:* cdxgen (ML-BOM) + Trivy/Grype (CVE) + Dependency-Track (monitoring) + Presidio/Macie/DLP (corpus PII) + sigstore/SLSA (provenance) + HF/ModelOp (license+inventory). **Cleanlab is the only poison-adjacent control.**
 
-2. **AI-native vs repurposed infra.** Genuinely AI-native: vector-DB tenant ACLs (ss_acl), LLM gateways (LiteLLM/Portkey), MCP security (ToolHive), agent observability (LangSmith/Langfuse/AgentOps/Helicone), HumanLayer, Lakera. Everything else repurposes OPA/OpenFGA/Keycloak/Vault/K8s/Envoy/SIEM.
+2. **AI-native vs repurposed infra.** Genuinely AI-native: vector-DB tenant ACLs (ss_acl), LLM gateways (LiteLLM/Portkey), MCP security (ToolHive, **nono** — kernel-enforced agent sandbox), agent observability (LangSmith/Langfuse/AgentOps/Helicone), HumanLayer, Lakera. Everything else repurposes OPA/OpenFGA/Keycloak/Vault/K8s/Envoy/SIEM.
 
-3. **The five weakest-covered controls (build, don't buy):**
+3. **The weakest-covered controls (build, don't buy):** *(updated — nono removes `kill` and `agent`-isolation-in-enforcement from this list; the genuine build gaps are now data/supply-chain + operational)*
    - `post_emb` (embedding-exposure detector) — **must build**; only CSPM + VDB audit-log signal exists.
    - `sc_train` pre-train *poisoning* — **no production tool**; research-stage only.
-   - `agent` isolation — an **architecture**, not a framework toggle.
-   - `kill` — **no product**, composed from Vault+K8s+Temporal+framework stop.
-   - `risk` classification — **mostly custom** LLM-judge + rules.
+   - `agent` isolation — an **architecture**; nono makes the *tool-execution* half enforceable, but the planner/executor split is still a design decision.
+   - `risk` classification — **mostly custom** LLM-judge + rules (nono handles argv/command policy, not semantic risk of the *action*).
+   - *Downgraded:* `kill` is no longer "no product" — nono's per-invocation sandbox-destroy + Vault revoke + Temporal cancel form a credible containment story, though no single "AI kill switch" button exists.
 
 4. **"Separate-instance inspector" is the load-bearing rule.** `post_dlp` and `an_dlp` rely on a DLP/inspector model *disjoint* from the app LLM. SaaS DLP (Lakera/Nightfall) technically re-introduces egress; for the repo's threat model, self-hosted Presidio / open-weight Llama Guard / Private AI is the faithful implementation.
 
