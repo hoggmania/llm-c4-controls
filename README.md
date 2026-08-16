@@ -54,6 +54,7 @@ component crosswalk and coverage strength are in [`05-owasp-coverage.md`](05-owa
 | `05-owasp-coverage.md` | OWASP GenAI LLM and Agentic Top 10 2026 coverage matrices + surface notes |
 | `CANDIDATE_APPS.md` | Candidate applications (open + closed source) implementing each control, with a 41-row completeness matrix + per-control detail |
 | `candidate-apps/` | Per-cluster research tables + rendered completeness heatmap backing `CANDIDATE_APPS.md` |
+| `OSS_ARCHITECTURE.md` | Concrete OSS-only reference architecture: 41 controls → real self-hostable tools, with Mermaid diagrams (flow/sequence/topology) |
 | `linkedin-completeness-summary.md` | LinkedIn-ready narrative of the findings (with embedded heatmap) |
 | `article.md` | Long-form article: "Where Private Data Actually Leaks in AI Systems" |
 
