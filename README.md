@@ -46,18 +46,18 @@ component crosswalk and coverage strength are in [`docs/owasp-coverage.md`](docs
 
 | Path | What |
 |---|---|
-| `diagrams/` | C4 `.puml` sources (`01-`..`05-`) |
-| `diagrams/rendered/` | Rendered PNGs of the C4 diagrams + the LinkedIn layers figure |
-| `docs/c4-guide.md` | How to read the C4 model and the five diagram views |
-| `docs/agentic-controls.md` | Agentic control philosophy one-pager (OWASP Agentic Top 10 2026) |
-| `docs/threat-analysis.md` | Detailed threat model: kill-chain, per-surface threats, STRIDE coverage, prioritized gaps |
-| `docs/owasp-coverage.md` | OWASP GenAI LLM + Agentic Top 10 2026 coverage matrices |
-| `docs/tool-candidates.md` | Candidate apps (open + commercial) per control — 41-row completeness matrix |
-| `docs/oss-reference-architecture.md` | Concrete OSS-only reference architecture (Mermaid) |
-| `docs/article.md` | Long-form article: "Where Private Data Actually Leaks in AI Systems" |
-| `docs/research/` | Per-cluster tool research tables backing `tool-candidates.md` |
-| `docs/completeness-heatmap.png` | Rendered completeness heatmap |
-| `posts/linkedin-completeness-summary.md` | LinkedIn-ready narrative of the findings |
+| [`diagrams/`](diagrams/) | C4 `.puml` sources (`01-`..`05-`) |
+| [`diagrams/rendered/`](diagrams/rendered/) | Rendered PNGs of the C4 diagrams + the LinkedIn layers figure |
+| [`docs/c4-guide.md`](docs/c4-guide.md) | How to read the C4 model and the five diagram views |
+| [`docs/agentic-controls.md`](docs/agentic-controls.md) | Agentic control philosophy one-pager (OWASP Agentic Top 10 2026) |
+| [`docs/threat-analysis.md`](docs/threat-analysis.md) | Detailed threat model: kill-chain, per-surface threats, STRIDE coverage, prioritized gaps |
+| [`docs/owasp-coverage.md`](docs/owasp-coverage.md) | OWASP GenAI LLM + Agentic Top 10 2026 coverage matrices |
+| [`docs/tool-candidates.md`](docs/tool-candidates.md) | Candidate apps (open + commercial) per control — 41-row completeness matrix |
+| [`docs/oss-reference-architecture.md`](docs/oss-reference-architecture.md) | Concrete OSS-only reference architecture (Mermaid) |
+| [`docs/article.md`](docs/article.md) | Long-form article: "Where Private Data Actually Leaks in AI Systems" |
+| [`docs/research/`](docs/research/) | Per-cluster tool research tables backing [`tool-candidates.md`](docs/tool-candidates.md) |
+| [`docs/completeness-heatmap.png`](docs/completeness-heatmap.png) | Rendered completeness heatmap |
+| [`posts/linkedin-completeness-summary.md`](posts/linkedin-completeness-summary.md) | LinkedIn-ready narrative of the findings |
 
 ## Render the diagrams
 
