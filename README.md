@@ -50,6 +50,7 @@ component crosswalk and coverage strength are in [`docs/owasp-coverage.md`](docs
 | `diagrams/rendered/` | Rendered PNGs of the C4 diagrams + the LinkedIn layers figure |
 | `docs/c4-guide.md` | How to read the C4 model and the five diagram views |
 | `docs/agentic-controls.md` | Agentic control philosophy one-pager (OWASP Agentic Top 10 2026) |
+| `docs/threat-analysis.md` | Detailed threat model: kill-chain, per-surface threats, STRIDE coverage, prioritized gaps |
 | `docs/owasp-coverage.md` | OWASP GenAI LLM + Agentic Top 10 2026 coverage matrices |
 | `docs/tool-candidates.md` | Candidate apps (open + commercial) per control — 41-row completeness matrix |
 | `docs/oss-reference-architecture.md` | Concrete OSS-only reference architecture (Mermaid) |
