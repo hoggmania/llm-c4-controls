@@ -3,8 +3,7 @@
 This page explains the C4 model used in this repo and how the diagrams map onto the
 private-data-exposure story told in [`article.md`](article.md). It covers the five
 diagram views and the OWASP GenAI LLM Top 10 2026 coverage in
-[`05-owasp-coverage.md`](05-owasp-coverage.md).
-
+[`05-owasp-coverage.md`](owasp-coverage.md)
 All diagrams are rendered with the native PlantUML binary (v1.2026.6, no JRE required)
 from the `.puml` sources in this repo.
 
@@ -33,7 +32,7 @@ Establishes the actors (End User, AI Engineer, Compliance/Risk) and the external
 (Model Provider, Enterprise Data, Regulator). Cross-cutting controls — governance, access
 control, logging, vendor risk, compliance — apply at every level.
 
-![C4 Level 1 — System Context](01-context.png)
+![C4 Level 1 — System Context](../diagrams/rendered/01-context.png)
 
 ## Level 2 — Container
 
@@ -41,7 +40,7 @@ Where the controls physically live. The key containers are the **Guardrail/Polic
 (input + output filtering, PII redaction, jailbreak/prompt-injection defense), the **LLM
 Gateway** (key management, routing, metering), and the **Observability & Audit** store.
 
-![C4 Level 2 — Container](02-container.png)
+![C4 Level 2 — Container](../diagrams/rendered/02-container.png)
 
 ## Level 3 — Component (lifecycle stages)
 
@@ -51,7 +50,7 @@ Controls grouped by lifecycle stage:
 - **Output:** Output Moderation, Output Validator, PII Re-exposure Guard
 - **Assurance/ops:** Audit Logger, Human-in-the-Loop, Eval & Drift Monitor, Policy/Config Store
 
-![C4 Level 3 — Component (lifecycle stages)](03-component.png)
+![C4 Level 3 — Component (lifecycle stages)](../diagrams/rendered/03-component.png)
 
 ## Level 3 — Data-exposure across surfaces (the core view)
 
@@ -68,7 +67,7 @@ across the four real surfaces plus the two layers most programs omit:
 Risk and control components are annotated with the applicable OWASP GenAI LLM Top 10
 2026 categories (LLM01–LLM10).
 
-![C4 Level 3 — Private-data exposure controls across AI surfaces](04-data-exposure-controls.png)
+![C4 Level 3 — Data-exposure across surfaces](../diagrams/rendered/04-data-exposure-controls.png)
 
 ## Level 3 — Agent tool and runtime controls
 
@@ -91,7 +90,7 @@ categories. The diagram marks incomplete coverage explicitly: goal integrity, si
 pinned tool provenance, persistent memory controls, agent-to-agent protocols and
 per-agent behavioral attestation need additional components for full treatment.
 
-![C4 Level 3 — Agent tool and runtime controls](05-agent-tool-runtime-controls.png)
+![C4 Level 3 — Agent tool/runtime controls](../diagrams/rendered/05-agent-tool-runtime-controls.png)
 
 ## Visual summary (LinkedIn banner)
 
@@ -110,7 +109,7 @@ ingestion and runtime controls. The labels identify the lifecycle stages, while 
 minimal symbols keep the image suitable for an article banner; the C4 diagrams remain
 the authoritative technical views.
 
-![LLM private-data control layers across the AI lifecycle](linkedin-c4-layers.png)
+![LLM private-data control layers across the AI lifecycle](../diagrams/rendered/linkedin-c4-layers.png)
 
 ## Diagram sources
 
@@ -122,11 +121,11 @@ The `.puml` files are the authoritative artifacts. They use the C4-PlantUML macr
 plantuml -tpng 01-context.puml 02-container.puml 03-component.puml 04-data-exposure-controls.puml 05-agent-tool-runtime-controls.puml
 ```
 
-- [`01-context.puml`](01-context.puml) · [`01-context.png`](01-context.png)
-- [`02-container.puml`](02-container.puml) · [`02-container.png`](02-container.png)
-- [`03-component.puml`](03-component.puml) · [`03-component.png`](03-component.png)
-- [`04-data-exposure-controls.puml`](04-data-exposure-controls.puml) · [`04-data-exposure-controls.png`](04-data-exposure-controls.png)
-- [`05-agent-tool-runtime-controls.puml`](05-agent-tool-runtime-controls.puml) · [`05-agent-tool-runtime-controls.png`](05-agent-tool-runtime-controls.png)
+- [`01-context.puml`](../diagrams/01-context.puml) · [`01-context.png`](../diagrams/rendered/01-context.png)
+- [`02-container.puml`](../diagrams/02-container.puml) · [`02-container.png`](../diagrams/rendered/02-container.png)
+- [`03-component.puml`](../diagrams/03-component.puml) · [`03-component.png`](../diagrams/rendered/03-component.png)
+- [`04-data-exposure-controls.puml`](../diagrams/04-data-exposure-controls.puml) · [`04-data-exposure-controls.png`](../diagrams/rendered/04-data-exposure-controls.png)
+- [`05-agent-tool-runtime-controls.puml`](../diagrams/05-agent-tool-runtime-controls.puml) · [`05-agent-tool-runtime-controls.png`](../diagrams/rendered/05-agent-tool-runtime-controls.png)
 
 ## OWASP coverage
 
@@ -153,5 +152,5 @@ Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-age
 and secondarily to applicable LLM categories. It covers every `ASI` category, with
 partial coverage explicitly identified rather than treated as complete mitigation.
 
-See [`05-owasp-coverage.md`](05-owasp-coverage.md) for the per-surface notes and the
+See [`05-owasp-coverage.md`](owasp-coverage.md) for the per-surface notes and the
 two coverage matrices, plus the "LLM as a new type of DLP" reframe.

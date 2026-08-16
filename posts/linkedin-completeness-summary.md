@@ -34,6 +34,6 @@ LLM data-security is a **build problem wearing a buy problem's clothes**. Spend 
 
 Full 41-control matrix and per-control tooling: https://github.com/hoggmania/llm-c4-controls
 
-![Completeness heatmap](candidate-apps/completeness-heatmap.png)
+![Completeness heatmap](../docs/completeness-heatmap.png)
 
 #LLMsecurity #AISecurity #OWASP #GenAI #DataLeakage #AgenticAI #C4model #DLP

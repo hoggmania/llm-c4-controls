@@ -5,7 +5,7 @@ two Level-3 C4 diagrams (`04-data-exposure-controls.puml`, `05-agent-tool-runtim
 Every tool named here is OSS and self-hostable. Where a control has **no** OSS tool (e.g. `post_emb`,
 `sc_train` poisoning), that is called out as a build item rather than papered over.
 
-> Companion to [`CANDIDATE_APPS.md`](CANDIDATE_APPS.md) (which also lists commercial options) and the
+> Companion to [`tool-candidates.md`](tool-candidates.md) (which also lists commercial options) and the
 > PlantUML C4 sources. Diagrams below are Mermaid (GitHub-native) and complement those `.puml` views.
 > Validation: all Mermaid blocks in this file render under `@mermaid-js/mermaid-cli` v11.
 

@@ -135,7 +135,7 @@ The agent tool/runtime view uses the separate Agentic Top 10 as its primary fram
 | ASI09 | Human-Agent Trust Exploitation | scoped proposal, risk classification, approval evidence | Moderate |
 | ASI10 | Rogue Agents | audit, revocation and kill switch | Partial |
 
-The detailed component-to-category crosswalk, including the secondary LLM mapping, is in [`05-owasp-coverage.md`](05-owasp-coverage.md).
+The detailed component-to-category crosswalk, including the secondary LLM mapping, is in [`05-owasp-coverage.md`](owasp-coverage.md).
 
 ---
 
