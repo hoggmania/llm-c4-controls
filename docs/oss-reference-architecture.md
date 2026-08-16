@@ -25,7 +25,7 @@ Every tool named here is OSS and self-hostable. Where a control has **no** OSS t
 
 ```mermaid
 flowchart LR
-  subgraph A[04 Private-Data Exposure]
+  subgraph A["04 Private-Data Exposure"]
     A1[AI Analyzer<br/>an_dlp an_rbac an_inj an_out]
     A2[Tokenizer/Diagnostics<br/>tok_scrub tok_gate tok_rl]
     A3[Semantic Search<br/>ss_enc ss_acl ss_val]
@@ -39,7 +39,6 @@ flowchart LR
       B2[risk approval credential txn proxy]
       B3[result governor resilience audit kill]
     end
-  end
 
   A1 --> PRES(Presidio + NeMo Guardrails + OPA)
   A2 --> LIT(LiteLLM gateway + vLLM)
@@ -57,6 +56,8 @@ flowchart LR
   LANGFUSE[Langfuse] -.-> A6
   LANGFUSE -.-> B3
 ```
+
+![Component map — controls to OSS tools](diagrams/oss-01-flowchart.png)
 
 ## Request / data-exposure flow (a single query)
 
@@ -93,6 +94,8 @@ sequenceDiagram
   Post-->>U: Final answer
 ```
 
+![Request / data-exposure flow](diagrams/oss-02-sequenceDiagram.png)
+
 ## Agent tool-execution loop (`05`) — nono in the middle
 
 The enforcement spine. Every tool call is brokered by nono; the app LLM never touches a real
@@ -102,14 +105,14 @@ credential or an unsandboxed process.
 sequenceDiagram
   autonumber
   participant LLM as Agent LLM
-  participant Plan as LangGraph (agent/proposal)
+  participant Plan as LangGraph [agent/proposal]
   participant SUP as nono supervisor
-  participant POL as OPA (pdp/registry/rag_acl/risk)
+  participant POL as OPA [pdp/registry/rag_acl/risk]
   participant SBX as nono micro-sandbox
   participant PRX as nono L7 proxy
   participant TOOL as External tool / API
-  participant VLT as Vault (credential)
-  participant HUM as Human (approval)
+  participant VLT as Vault [credential]
+  participant HUM as Human [approval]
   participant AUD as nono Merkle audit + OTel
 
   LLM->>Plan: Propose action + tool call
@@ -129,9 +132,11 @@ sequenceDiagram
   PRX-->>SBX: Result across supervisor boundary
   SBX-->>SUP: Output (validated by GuardrailsAI)
   SUP->>AUD: Hash-chain event (Merkle root)
-  SUP->>LLM: Sandbox destroyed; result returned
-  note over SUP,SBX: kill switch = Vault revoke + Temporal cancel + sandbox destroy
+  SUP->>LLM: Sandbox destroyed, result returned
+  SUP->>SUP: kill switch = Vault revoke + Temporal cancel + sandbox destroy
 ```
+
+![Agent tool-execution loop](diagrams/oss-03-sequenceDiagram.png)
 
 ## Enforcement-spine detail (nono)
 
@@ -159,6 +164,8 @@ flowchart TD
   style AUD fill:#c8e6c9
   style DESTROY fill:#ffcdd2
 ```
+
+![Enforcement-spine detail (nono)](diagrams/oss-04-flowchart.png)
 
 ## Deployment topology
 
@@ -205,6 +212,8 @@ flowchart TB
   OT --> EVID
   CDX --> COS
 ```
+
+![Deployment topology](diagrams/oss-05-flowchart.png)
 
 ## Consolidated OSS control → tool mapping
 

@@ -53,7 +53,8 @@ component crosswalk and coverage strength are in [`docs/owasp-coverage.md`](docs
 | [`docs/threat-analysis.md`](docs/threat-analysis.md) | Detailed threat model: kill-chain, per-surface threats, STRIDE coverage, prioritized gaps |
 | [`docs/owasp-coverage.md`](docs/owasp-coverage.md) | OWASP GenAI LLM + Agentic Top 10 2026 coverage matrices |
 | [`docs/tool-candidates.md`](docs/tool-candidates.md) | Candidate apps (open + commercial) per control — 41-row completeness matrix |
-| [`docs/oss-reference-architecture.md`](docs/oss-reference-architecture.md) | Concrete OSS-only reference architecture (Mermaid) |
+| [`docs/oss-reference-architecture.md`](docs/oss-reference-architecture.md) | Concrete OSS-only reference architecture (Mermaid + static PNG renders in `docs/diagrams/`) |
+| [`docs/diagrams/`](docs/diagrams/) | Static PNG renders of all Mermaid diagrams (embedded in the docs; no GitHub Mermaid dependency) |
 | [`docs/article.md`](docs/article.md) | Long-form article: "Where Private Data Actually Leaks in AI Systems" |
 | [`docs/research/`](docs/research/) | Per-cluster tool research tables backing [`tool-candidates.md`](docs/tool-candidates.md) |
 | [`docs/completeness-heatmap.png`](docs/completeness-heatmap.png) | Rendered completeness heatmap |
