@@ -67,7 +67,6 @@ flowchart TD
 continue. The model is never the only failure — it is a relay. Defense-in-depth means breaking the
 chain at *multiple* hops, not hardening one.
 
-![Attack kill-chain](diagrams/threat-01-flowchart.png)
 
 ## 3. Per-surface threat analysis
 
@@ -163,8 +162,6 @@ flowchart LR
   style E fill:#e1bee7
 ```
 
-![STRIDE-style control coverage](diagrams/threat-02-flowchart.png)
-
 ## 5. Highest-impact gaps (prioritized)
 
 | # | Gap | Enables | Severity |
@@ -208,7 +205,6 @@ flowchart TB
   S2 --> SOC
 ```
 
-![Defense-in-depth topology](diagrams/threat-03-flowchart.png)
 
 ## 7. Recommended remediation priority
 

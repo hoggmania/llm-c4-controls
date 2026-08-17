@@ -34,7 +34,7 @@ flowchart LR
     A6[Post-Usage<br/>post_dlp post_emb post_anom post_drift post_alert post_rt]
     end
 
-    subgraph B[05 Agent Tool / Runtime]
+    subgraph B["05 Agent Tool / Runtime"]
       B1[agent proposal registry identity param pdp]
       B2[risk approval credential txn proxy]
       B3[result governor resilience audit kill]
@@ -56,8 +56,6 @@ flowchart LR
   LANGFUSE[Langfuse] -.-> A6
   LANGFUSE -.-> B3
 ```
-
-![Component map — controls to OSS tools](diagrams/oss-01-flowchart.png)
 
 ## Request / data-exposure flow (a single query)
 
@@ -93,8 +91,6 @@ sequenceDiagram
   App->>Post: Emit metrics + trace
   Post-->>U: Final answer
 ```
-
-![Request / data-exposure flow](diagrams/oss-02-sequenceDiagram.png)
 
 ## Agent tool-execution loop (`05`) — nono in the middle
 
@@ -136,8 +132,6 @@ sequenceDiagram
   SUP->>SUP: kill switch = Vault revoke + Temporal cancel + sandbox destroy
 ```
 
-![Agent tool-execution loop](diagrams/oss-03-sequenceDiagram.png)
-
 ## Enforcement-spine detail (nono)
 
 Why nono collapses 7 controls into one binary. Request → resolve → authorize → spawn → execute →
@@ -164,8 +158,6 @@ flowchart TD
   style AUD fill:#c8e6c9
   style DESTROY fill:#ffcdd2
 ```
-
-![Enforcement-spine detail (nono)](diagrams/oss-04-flowchart.png)
 
 ## Deployment topology
 
@@ -212,8 +204,6 @@ flowchart TB
   OT --> EVID
   CDX --> COS
 ```
-
-![Deployment topology](diagrams/oss-05-flowchart.png)
 
 ## Consolidated OSS control → tool mapping
 
